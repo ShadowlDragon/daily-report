@@ -1,0 +1,328 @@
+:root {
+    color-scheme: light;
+}
+
+body,
+.page {
+
+    background: white !important;
+}
+
+body,
+table,
+td,
+th,
+div,
+span {
+
+    color: black !important;
+}
+
+body {
+    margin: 0;
+    font-family: Arial;
+}
+
+/* tạo wrapper riêng để center */
+.layout {
+    width: fit-content;
+    margin: 20px auto;
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+/* PAGE */
+.page {
+    width: 794px;
+    background: white;
+    padding: 15px;
+    box-sizing: border-box;
+}
+
+/* SIDEBAR BUTTON */
+/* TOOLBAR */
+.controls {
+    position: sticky;
+    width: 150px;
+    top: 50vh;
+    transform: translateY(-50%);
+
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    height: fit-content;
+    opacity: 0;
+    pointer-events: none;
+
+    transform:
+        translateY(-50%)
+        translateX(20px);
+
+    transition: all 0.25s ease;
+}
+
+.controls.active {
+    opacity: 1;
+    pointer-events: auto;
+
+    transform:
+        translateY(-50%)
+        translateX(0);
+}
+
+/* BUTTON */
+.controls button {
+    display: flex;
+    align-items: center;
+
+    width: 52px;
+    height: 52px;
+
+    padding: 0;
+
+    overflow: hidden;
+
+    border: none;
+    border-radius: 999px;
+
+    background: #4a6cf7;
+    color: white;
+
+    cursor: pointer;
+
+    transition:
+        width 0.25s ease,
+        background 0.25s ease;
+
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* ICON */
+.controls .icon {
+    width: 52px;
+    min-width: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+.controls button:nth-child(1) {
+    background: #4a6cf7;
+}
+
+.controls button:nth-child(2) {
+    background: #ef4444;
+}
+
+.controls button:nth-child(3) {
+    background: #f59e0b;
+}
+
+.controls button:nth-child(4) {
+    background: #10b981;
+}
+
+/* LABEL */
+.controls .label {
+    opacity: 0;
+    white-space: nowrap;
+    transition: opacity 0.2s ease;
+    padding-right: 18px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+/* HOVER CHỈ BUTTON ĐÓ */
+.controls button:hover {
+    width: 160px;
+}
+
+.controls button:hover .label {
+    opacity: 1;
+}
+
+/* HEADER TABLE */
+.header-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.header-table td {
+    border: 1px solid black;
+    vertical-align: middle;
+}
+
+/* LOGO */
+.logo-cell {
+    width: 120px;
+    text-align: center;
+}
+
+.logo-cell img {
+    width: 90px;
+}
+
+/* TITLE */
+.title-cell {
+    text-align: center;
+    font-weight: bold;
+    font-size: 20px;
+    color: #6c7ae0;
+}
+
+/* RIGHT INFO */
+.info-cell {
+    width: 220px;
+    padding: 0;
+}
+
+.info-cell table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.info-cell td {
+    border: 1px solid black;
+    padding: 2px 4px;
+}
+
+/* TABLE */
+.section-title {
+    background: #cfe2f3;
+    font-weight: bold;
+    padding: 4px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 10px;
+}
+
+td, th {
+    border: 1px solid black;
+    padding: 5px;
+}
+
+td[contenteditable] {
+    background: #fafafa;
+}
+
+button {
+    padding: 10px 14px;
+    margin: 5px;
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    background: #4a6cf7;
+    color: white;
+    font-weight: bold;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+table {
+    page-break-inside: avoid;
+}
+
+tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+}
+
+.section-title {
+    page-break-after: avoid;
+}
+
+.section-block {
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
+
+/* =========================
+   TYPING OVERLAY
+========================= */
+
+td {
+    position: relative;
+}
+
+.typing-overlay {
+
+    position: absolute;
+
+    inset: 0;
+
+    background: rgba(255,255,255,0.85);
+
+    display: flex;
+    align-items: center;
+
+    padding-left: 10px;
+
+    font-size: 13px;
+    color: #666;
+
+    pointer-events: none;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+}
+
+.typing-text {
+
+    display: flex;
+    align-items: center;
+
+    white-space: nowrap;
+}
+
+
+/* DOTS */
+.typing-dots {
+
+    display: inline-flex;
+
+    margin-left: 5px;
+}
+
+
+/* EACH DOT */
+.typing-dots span {
+
+    animation: blink 1s infinite;
+
+    font-weight: bold;
+
+    opacity: 0.2;
+}
+
+
+/* DELAY */
+.typing-dots span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.typing-dots span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+
+/* ANIMATION */
+@keyframes blink {
+
+    0%, 80%, 100% {
+        opacity: 0.2;
+    }
+
+    40% {
+        opacity: 1;
+    }
+}

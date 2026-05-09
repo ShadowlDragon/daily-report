@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>
+        DOR Report
+    </title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <!-- FONT AWESOME -->
+    <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+</head>
+
+<body>
+
+    <div class="layout">
+
+        <!-- REPORT -->
+        <div id="report" class="page">
+
+            <!-- HEADER -->
+            <div class="header">
+
+                <table class="header-table">
+
+                    <tr>
+
+                        <!-- LOGO -->
+                        <td class="logo-cell">
+
+                            <img
+                                src="logo.jpg"
+                                crossorigin="anonymous">
+
+                        </td>
+
+                        <!-- TITLE -->
+                        <td class="title-cell"
+                            contenteditable="true">
+
+                            DAILY OPERATION REPORT PVD II
+
+                        </td>
+
+                        <!-- INFO -->
+                        <td class="info-cell">
+
+                            <table>
+
+                                <tr>
+                                    <td>PVD Doc Ref:</td>
+                                    <td>PVDII/STC</td>
+                                </tr>
+
+                                <tr>
+                                    <td>Orig. Issue Date:</td>
+                                    <td>17 Oct 11</td>
+                                </tr>
+
+                                <tr>
+                                    <td>Rev. No:</td>
+                                    <td>01</td>
+                                </tr>
+
+                                <tr>
+                                    <td>Rev. Date:</td>
+                                    <td>17 Oct 11</td>
+                                </tr>
+
+                                <tr>
+                                    <td>No of Pages:</td>
+                                    <td>1/3</td>
+                                </tr>
+
+                            </table>
+
+                        </td>
+
+                    </tr>
+
+                </table>
+
+                <!-- BOTTOM -->
+                <div class="header-bottom">
+
+                    <table>
+
+                        <tr>
+
+                            <td>
+                                <b>Rig Name</b>
+                            </td>
+
+                            <td
+                                contenteditable="true"
+                                data-cell="RigName">
+
+                                PV Drilling - II
+
+                            </td>
+
+                            <td>
+                                <b>Date:</b>
+                            </td>
+
+                            <td id="date"></td>
+
+                        </tr>
+
+                        <tr>
+
+                            <td>
+                                <b>Total POB</b>
+                            </td>
+
+                            <td
+                                contenteditable="true"
+                                data-cell="TotalPOB">
+
+                                POB =120
+
+                            </td>
+
+                            <td>
+                                <b>Operator</b>
+                            </td>
+
+                            <td
+                                contenteditable="true"
+                                data-cell="Operator">
+
+                                PERTAMINA
+
+                            </td>
+
+                        </tr>
+
+                        <tr>
+
+                            <td>
+                                <b>Current Activities</b>
+                            </td>
+
+                            <td
+                                colspan="3"
+                                contenteditable="true"
+                                data-cell="CurrentActivities">
+
+                                Slick-line on LLA - 2
+
+                            </td>
+
+                        </tr>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- TOOLBAR -->
+        <div class="controls">
+
+            <!-- ADD -->
+            <button onclick="addRow()">
+
+                <span class="icon">
+                    <i class="fa-solid fa-plus"></i>
+                </span>
+
+                <span class="label">
+                    Add Row
+                </span>
+
+            </button>
+
+
+            <!-- DELETE -->
+            <button onclick="deleteRow()">
+
+                <span class="icon">
+                    <i class="fa-solid fa-trash"></i>
+                </span>
+
+                <span class="label">
+                    Delete Row
+                </span>
+
+            </button>
+
+
+            <!-- CLEAR -->
+            <button onclick="clearTable()">
+
+                <span class="icon">
+                    <i class="fa-solid fa-broom"></i>
+                </span>
+
+                <span class="label">
+                    Clear Content
+                </span>
+
+            </button>
+
+
+            <!-- PDF -->
+            <button onclick="exportPDF()">
+
+                <span class="icon">
+                    <i class="fa-solid fa-file-pdf"></i>
+                </span>
+
+                <span class="label">
+                    Export PDF
+                </span>
+
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- SOCKET -->
+    <script src="/socket.io/socket.io.js"></script>
+
+    <!-- MAIN JS -->
+    <script src="script.js"></script>
+
+</body>
+
+</html>
