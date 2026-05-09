@@ -156,7 +156,6 @@ async function exportPDF() {
 
     try {
 
-        // SHOW LOADING
         loading.classList.add(
             "active"
         );
@@ -221,7 +220,6 @@ async function exportPDF() {
 
     } finally {
 
-        // HIDE LOADING
         loading.classList.remove(
             "active"
         );
@@ -450,6 +448,8 @@ function bindEditableCells() {
 // =========================
 // SOCKET EVENTS
 // =========================
+
+// UPDATE CELL
 socket.on("cellUpdated", (data) => {
 
     const cell =
@@ -462,8 +462,189 @@ socket.on("cellUpdated", (data) => {
     if (document.activeElement === cell)
         return;
 
+    const overlay =
+        cell.querySelector(
+            ".typing-overlay"
+        );
+
     cell.innerText =
         data.value;
+
+    if (overlay) {
+
+        cell.appendChild(overlay);
+    }
+});
+
+
+// LOCK
+socket.on("cellLocked", (cellId) => {
+
+    const cell =
+        document.querySelector(
+            `[data-cell="${cellId}"]`
+        );
+
+    if (!cell) return;
+
+    if (document.activeElement === cell)
+        return;
+
+    cell.setAttribute(
+        "contenteditable",
+        "false"
+    );
+
+    cell.style.background =
+        "#ffe4e4";
+});
+
+
+// UNLOCK
+socket.on("cellUnlocked", (cellId) => {
+
+    const cell =
+        document.querySelector(
+            `[data-cell="${cellId}"]`
+        );
+
+    if (!cell) return;
+
+    cell.setAttribute(
+        "contenteditable",
+        "true"
+    );
+
+    cell.style.background =
+        "white";
+
+    const overlay =
+        cell.querySelector(
+            ".typing-overlay"
+        );
+
+    if (overlay)
+        overlay.remove();
+});
+
+
+// TYPING
+socket.on("typing", (data) => {
+
+    const cell =
+        document.querySelector(
+            `[data-cell="${data.cellId}"]`
+        );
+
+    if (!cell) return;
+
+    if (document.activeElement === cell)
+        return;
+
+    const old =
+        cell.querySelector(
+            ".typing-overlay"
+        );
+
+    if (old)
+        old.remove();
+
+    const overlay =
+        document.createElement("div");
+
+    overlay.className =
+        "typing-overlay";
+
+    overlay.innerHTML = `
+        <div class="typing-text">
+
+            ${data.ip} is editing
+
+            <span class="typing-dots">
+                <span>.</span>
+                <span>.</span>
+                <span>.</span>
+            </span>
+
+        </div>
+    `;
+
+    cell.appendChild(overlay);
+});
+
+
+// ADD ROW
+socket.on("rowAdded", (data) => {
+
+    const table =
+        document.querySelector(
+            `table[data-section="${data.section}"]`
+        );
+
+    if (!table) return;
+
+    const rowCount =
+        table.rows.length;
+
+    const row =
+        table.insertRow();
+
+    row.innerHTML = `
+        <td class="no"
+            style="text-align:center">
+
+            ${rowCount}
+
+        </td>
+
+        <td
+            contenteditable="true"
+            data-cell="${data.section}-${rowCount}">
+        </td>
+    `;
+
+    bindEditableCells();
+});
+
+
+// DELETE ROW
+socket.on("rowDeleted", (data) => {
+
+    const table =
+        document.querySelector(
+            `table[data-section="${data.section}"]`
+        );
+
+    if (!table) return;
+
+    if (table.rows.length <= 2)
+        return;
+
+    table.deleteRow(
+        table.rows.length - 1
+    );
+});
+
+
+// CLEAR TABLE
+socket.on("tableCleared", (data) => {
+
+    const table =
+        document.querySelector(
+            `table[data-section="${data.section}"]`
+        );
+
+    if (!table) return;
+
+    const rows =
+        table.querySelectorAll("tr");
+
+    for (let i = 1; i < rows.length; i++) {
+
+        rows[i]
+        .cells[1]
+        .innerText = "";
+    }
 });
 
 
