@@ -1,6 +1,7 @@
 // =========================
-// SECTIONS
+// SCRIPT.JS
 // =========================
+
 const sections = [
     "Safety",
     "Drilling",
@@ -38,7 +39,6 @@ function init() {
     document.getElementById("date")
     .innerText = getToday();
 
-    // remove old section
     document.querySelectorAll(".section-block")
     .forEach(el => el.remove());
 
@@ -47,13 +47,15 @@ function init() {
 
     sections.forEach(name => {
 
-        let title =
+        const title =
             document.createElement("div");
 
-        title.className = "section-title";
+        title.className =
+            "section-title";
+
         title.innerText = name;
 
-        let table =
+        const table =
             document.createElement("table");
 
         table.dataset.section = name;
@@ -79,7 +81,9 @@ function init() {
 
                     <td class="no"
                         style="text-align:center">
+
                         ${i}
+
                     </td>
 
                     <td
@@ -91,10 +95,11 @@ function init() {
             `;
         }
 
-        let block =
+        const block =
             document.createElement("div");
 
-        block.className = "section-block";
+        block.className =
+            "section-block";
 
         block.appendChild(title);
         block.appendChild(table);
@@ -140,7 +145,92 @@ async function loadReport() {
 
 
 // =========================
-// BIND TABLES
+// EXPORT PDF
+// =========================
+async function exportPDF() {
+
+    const loading =
+        document.getElementById(
+            "loadingScreen"
+        );
+
+    try {
+
+        // SHOW LOADING
+        loading.classList.add(
+            "active"
+        );
+
+        const res =
+            await fetch("/exportPDF");
+
+        if (!res.ok) {
+
+            const text =
+                await res.text();
+
+            alert(text);
+
+            return;
+        }
+
+        const blob =
+            await res.blob();
+
+        if (blob.size < 1000) {
+
+            alert(
+                "Invalid PDF generated"
+            );
+
+            return;
+        }
+
+        const url =
+            window.URL
+            .createObjectURL(blob);
+
+        const a =
+            document.createElement("a");
+
+        a.href = url;
+
+        a.download =
+            `DOR-${Date.now()}.pdf`;
+
+        document.body.appendChild(a);
+
+        a.click();
+
+        a.remove();
+
+        setTimeout(() => {
+
+            window.URL
+            .revokeObjectURL(url);
+
+        }, 1000);
+
+    } catch (err) {
+
+        console.error(err);
+
+        alert(
+            "PDF export failed"
+        );
+
+    } finally {
+
+        // HIDE LOADING
+        loading.classList.remove(
+            "active"
+        );
+    }
+}
+
+
+// =========================
+// TOOLBAR
 // =========================
 function bindTables() {
 
@@ -160,10 +250,6 @@ function bindTables() {
     });
 }
 
-
-// =========================
-// TOOLBAR
-// =========================
 document.addEventListener("click", (e) => {
 
     if (
@@ -185,33 +271,11 @@ document.querySelector(".controls")
 
 
 // =========================
-// AUTO NUMBER
-// =========================
-function renumber(table) {
-
-    let rows =
-        table.querySelectorAll("tr");
-
-    for (let i = 1; i < rows.length; i++) {
-
-        rows[i]
-        .querySelector(".no")
-        .innerText = i;
-    }
-}
-
-
-// =========================
 // ADD ROW
 // =========================
 function addRow() {
 
-    if (!currentTable) {
-
-        alert("Choose table");
-
-        return;
-    }
+    if (!currentTable) return;
 
     const section =
         currentTable.dataset.section;
@@ -225,7 +289,9 @@ function addRow() {
     row.innerHTML = `
         <td class="no"
             style="text-align:center">
+
             ${rowCount}
+
         </td>
 
         <td
@@ -247,19 +313,10 @@ function addRow() {
 // =========================
 function deleteRow() {
 
-    if (!currentTable) {
+    if (!currentTable) return;
 
-        alert("Choose table");
-
+    if (currentTable.rows.length <= 2)
         return;
-    }
-
-    if (currentTable.rows.length <= 2) {
-
-        alert("No more rows");
-
-        return;
-    }
 
     const section =
         currentTable.dataset.section;
@@ -279,12 +336,7 @@ function deleteRow() {
 // =========================
 function clearTable() {
 
-    if (!currentTable) {
-
-        alert("Choose table");
-
-        return;
-    }
+    if (!currentTable) return;
 
     const section =
         currentTable.dataset.section;
@@ -302,108 +354,6 @@ function clearTable() {
     socket.emit("clearTable", {
         section
     });
-}
-
-
-// =========================
-// EXPORT PDF
-// =========================
-function exportPDF() {
-
-    const content =
-        document.getElementById("report")
-        .cloneNode(true);
-
-    const iframe =
-        document.createElement("iframe");
-
-    iframe.style.position = "fixed";
-    iframe.style.width = "0";
-    iframe.style.height = "0";
-
-    document.body.appendChild(iframe);
-
-    const doc =
-        iframe.contentWindow.document;
-
-    doc.open();
-
-    doc.write(`
-        <html>
-
-        <head>
-
-            <style>
-
-                body {
-                    margin: 0;
-                    font-family: Arial;
-                    background: white;
-                }
-
-                .page {
-                    width: 794px;
-                    padding: 15px;
-                    box-sizing: border-box;
-                }
-
-                table {
-                    width: 100%;
-                    border-collapse: collapse;
-                }
-
-                td, th {
-                    border: 1px solid black;
-                    padding: 5px;
-                }
-
-                .section-title {
-                    background: #cfe2f3;
-                    font-weight: bold;
-                    padding: 4px;
-                }
-
-            </style>
-
-        </head>
-
-        <body>
-            ${content.outerHTML}
-        </body>
-
-        </html>
-    `);
-
-    doc.close();
-
-    setTimeout(() => {
-
-        html2pdf()
-        .set({
-
-            margin: 0,
-
-            filename: "report.pdf",
-
-            html2canvas: {
-                scale: 2
-            },
-
-            jsPDF: {
-                unit: "mm",
-                format: "a4"
-            }
-
-        })
-        .from(doc.body)
-        .save()
-        .then(() => {
-
-            document.body
-            .removeChild(iframe);
-        });
-
-    }, 300);
 }
 
 
@@ -439,7 +389,7 @@ async function saveCell(
 
 
 // =========================
-// BIND EDITABLE
+// EDITABLE CELLS
 // =========================
 function bindEditableCells() {
 
@@ -452,7 +402,6 @@ function bindEditableCells() {
 
         cell.dataset.bound = "1";
 
-        // FOCUS
         cell.addEventListener(
             "focus",
             () => {
@@ -462,13 +411,11 @@ function bindEditableCells() {
 
                 if (!cellId) return;
 
-                // LOCK
                 socket.emit(
                     "lockCell",
                     cellId
                 );
 
-                // EDITING INDICATOR
                 socket.emit(
                     "typing",
                     cellId
@@ -476,7 +423,6 @@ function bindEditableCells() {
             }
         );
 
-        // SAVE
         cell.addEventListener(
             "blur",
             async () => {
@@ -486,12 +432,9 @@ function bindEditableCells() {
 
                 if (!cellId) return;
 
-                const value =
-                    cell.innerText;
-
                 await saveCell(
                     cellId,
-                    value
+                    cell.innerText
                 );
 
                 socket.emit(
@@ -505,55 +448,7 @@ function bindEditableCells() {
 
 
 // =========================
-// LOCKED
-// =========================
-socket.on("cellLocked", (cellId) => {
-
-    const cell =
-        document.querySelector(
-            `[data-cell="${cellId}"]`
-        );
-
-    if (!cell) return;
-
-    if (document.activeElement === cell)
-        return;
-
-    cell.contentEditable = false;
-
-    cell.style.background =
-        "#ffd6d6";
-});
-
-
-// =========================
-// UNLOCKED
-// =========================
-socket.on("cellUnlocked", (cellId) => {
-
-    const cell =
-        document.querySelector(
-            `[data-cell="${cellId}"]`
-        );
-
-    if (!cell) return;
-
-    cell.contentEditable = true;
-
-    cell.style.background = "";
-
-    const overlay =
-        cell.querySelector(
-            ".typing-overlay"
-        );
-
-    if (overlay)
-        overlay.remove();
-});
-
-
-// =========================
-// CELL UPDATED
+// SOCKET EVENTS
 // =========================
 socket.on("cellUpdated", (data) => {
 
@@ -573,134 +468,6 @@ socket.on("cellUpdated", (data) => {
 
 
 // =========================
-// ROW ADDED
-// =========================
-socket.on("rowAdded", (data) => {
-
-    const table =
-        document.querySelector(
-            `table[data-section="${data.section}"]`
-        );
-
-    if (!table) return;
-
-    const rowCount =
-        table.rows.length;
-
-    const row =
-        table.insertRow();
-
-    row.innerHTML = `
-        <td class="no"
-            style="text-align:center">
-            ${rowCount}
-        </td>
-
-        <td
-            contenteditable="true"
-            data-cell="${data.section}-${rowCount}">
-        </td>
-    `;
-
-    bindEditableCells();
-});
-
-
-// =========================
-// ROW DELETED
-// =========================
-socket.on("rowDeleted", (data) => {
-
-    const table =
-        document.querySelector(
-            `table[data-section="${data.section}"]`
-        );
-
-    if (!table) return;
-
-    if (table.rows.length <= 2)
-        return;
-
-    table.deleteRow(
-        table.rows.length - 1
-    );
-});
-
-
-// =========================
-// TABLE CLEARED
-// =========================
-socket.on("tableCleared", (data) => {
-
-    const table =
-        document.querySelector(
-            `table[data-section="${data.section}"]`
-        );
-
-    if (!table) return;
-
-    const rows =
-        table.querySelectorAll("tr");
-
-    for (let i = 1; i < rows.length; i++) {
-
-        rows[i]
-        .cells[1]
-        .innerText = "";
-    }
-});
-
-
-// =========================
-// TYPING
-// =========================
-socket.on("typing", (data) => {
-
-    const cell =
-        document.querySelector(
-            `[data-cell="${data.cellId}"]`
-        );
-
-    if (!cell) return;
-
-    if (document.activeElement === cell)
-        return;
-
-    // remove old overlay
-    const old =
-        cell.querySelector(
-            ".typing-overlay"
-        );
-
-    if (old)
-        old.remove();
-
-    // create overlay
-    const overlay =
-        document.createElement("div");
-
-    overlay.className =
-        "typing-overlay";
-
-    overlay.innerHTML = `
-        <div class="typing-text">
-
-            ${data.ip} is editing
-
-            <span class="typing-dots">
-                <span>.</span>
-                <span>.</span>
-                <span>.</span>
-            </span>
-
-        </div>
-    `;
-
-    cell.appendChild(overlay);
-});
-
-
-// =========================
 // START
 // =========================
 async function start() {
@@ -708,6 +475,8 @@ async function start() {
     init();
 
     await loadReport();
+
+    bindEditableCells();
 }
 
 start();

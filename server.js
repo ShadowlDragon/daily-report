@@ -1,42 +1,53 @@
+// =========================
+// SERVER.JS
+// =========================
+
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 
-const fs = require("fs");
-const path = require("path");
+const puppeteer =
+    require("puppeteer");
+
+const fs =
+    require("fs");
+
+const path =
+    require("path");
 
 const app = express();
 
-const server = http.createServer(app);
+const server =
+    http.createServer(app);
 
-const io = new Server(server);
+const io =
+    new Server(server);
 
 
 // =========================
 // MIDDLEWARE
 // =========================
 app.use(express.json({
-    limit: "10mb"
+    limit: "50mb"
 }));
 
 app.use(express.static("public"));
 
 
 // =========================
-// SHARED FOLDER
+// REPORT FOLDER
 // =========================
 const REPORT_FOLDER =
-"\\\\srv-File-r8\\Group\\Electronic Technician\\Public\\Daily Operation Report"; //Shared file path
+"\\\\srv-File-r8\\Group\\Electronic Technician\\Public\\Daily Operation Report";
 
-
-// =========================
-// CREATE ROOT
-// =========================
 if (!fs.existsSync(REPORT_FOLDER)) {
 
-    fs.mkdirSync(REPORT_FOLDER, {
-        recursive: true
-    });
+    fs.mkdirSync(
+        REPORT_FOLDER,
+        {
+            recursive: true
+        }
+    );
 }
 
 
@@ -47,7 +58,7 @@ const lockedCells = {};
 
 
 // =========================
-// LOAD JSON
+// LOAD REPORT FILE
 // =========================
 function loadReportFile(date) {
 
@@ -60,9 +71,7 @@ function loadReportFile(date) {
             "report.json"
         );
 
-    // =====================
-    // FILE EXISTS
-    // =====================
+    // EXISTING
     if (fs.existsSync(filePath)) {
 
         return JSON.parse(
@@ -70,9 +79,7 @@ function loadReportFile(date) {
         );
     }
 
-    // =====================
-    // COPY PREVIOUS DAY
-    // =====================
+    // CLONE PREVIOUS DAY
     const previousDate =
         new Date(date);
 
@@ -92,19 +99,13 @@ function loadReportFile(date) {
             "report.json"
         );
 
-    // previous exists
     if (fs.existsSync(prevFile)) {
-
-        console.log(
-            `Cloning previous report: ${prevDateStr}`
-        );
 
         const prevData =
             JSON.parse(
                 fs.readFileSync(prevFile)
             );
 
-        // auto create today folder
         fs.mkdirSync(
             dailyFolder,
             {
@@ -112,7 +113,6 @@ function loadReportFile(date) {
             }
         );
 
-        // auto save today
         fs.writeFileSync(
             filePath,
             JSON.stringify(
@@ -125,15 +125,12 @@ function loadReportFile(date) {
         return prevData;
     }
 
-    // =====================
-    // EMPTY
-    // =====================
     return {};
 }
 
 
 // =========================
-// SAVE JSON
+// SAVE REPORT FILE
 // =========================
 function saveReportFile(
     date,
@@ -145,9 +142,12 @@ function saveReportFile(
 
     if (!fs.existsSync(dailyFolder)) {
 
-        fs.mkdirSync(dailyFolder, {
-            recursive: true
-        });
+        fs.mkdirSync(
+            dailyFolder,
+            {
+                recursive: true
+            }
+        );
     }
 
     const filePath =
@@ -168,6 +168,31 @@ function saveReportFile(
 
 
 // =========================
+// LOAD REPORT
+// =========================
+app.get("/load/:date", (req, res) => {
+
+    try {
+
+        const data =
+            loadReportFile(
+                req.params.date
+            );
+
+        res.json(data);
+
+    } catch (err) {
+
+        console.error(err);
+
+        res
+        .status(500)
+        .send(err.message);
+    }
+});
+
+
+// =========================
 // SAVE CELL
 // =========================
 app.post("/saveCell", (req, res) => {
@@ -180,35 +205,21 @@ app.post("/saveCell", (req, res) => {
             value
         } = req.body;
 
-        if (
-            !date ||
-            !cellId
-        ) {
-
-            return res
-            .status(400)
-            .send("Missing data");
-        }
-
-        let reportData =
+        const reportData =
             loadReportFile(date);
 
-        reportData[cellId] = value;
+        reportData[cellId] =
+            value;
 
         saveReportFile(
             date,
             reportData
         );
 
-        // realtime update
         io.emit("cellUpdated", {
             cellId,
             value
         });
-
-        console.log(
-            `Saved: ${cellId}`
-        );
 
         res.send("saved");
 
@@ -224,27 +235,138 @@ app.post("/saveCell", (req, res) => {
 
 
 // =========================
-// LOAD REPORT
+// EXPORT PDF
 // =========================
-app.get("/load/:date", (req, res) => {
+app.get("/exportPDF", async (req, res) => {
+
+    let browser;
 
     try {
 
-        const date =
-            req.params.date;
+        console.log("");
+        console.log("START EXPORT PDF");
 
-        const reportData =
-            loadReportFile(date);
+        browser =
+            await puppeteer.launch({
 
-        res.json(reportData);
+                headless: true,
+
+                args: [
+
+                    "--no-sandbox",
+
+                    "--disable-setuid-sandbox",
+
+                    "--disable-dev-shm-usage",
+
+                    "--disable-gpu"
+                ]
+            });
+
+        const page =
+            await browser.newPage();
+
+        // OPEN WEBSITE
+        await page.goto(
+            "http://127.0.0.1:3000",
+            {
+                waitUntil:
+                    "networkidle0",
+
+                timeout: 60000
+            }
+        );
+
+        // WAIT RENDER
+        await new Promise(resolve =>
+            setTimeout(resolve, 2000)
+        );
+
+        // HIDE TOOLBAR
+        await page.evaluate(() => {
+
+            const controls =
+                document.querySelector(
+                    ".controls"
+                );
+
+            if (controls) {
+
+                controls.style.display =
+                    "none";
+            }
+        });
+
+        // GENERATE PDF
+        const pdfBuffer =
+            await page.pdf({
+
+                format: "A4",
+
+                printBackground: true,
+
+                preferCSSPageSize: true,
+
+                scale: 1,
+
+                margin: {
+
+                    top: "10mm",
+                    bottom: "10mm",
+
+                    left: "10mm",
+                    right: "10mm"
+                }
+            });
+
+        console.log(
+            "PDF SIZE:",
+            pdfBuffer.length
+        );
+
+        // VALIDATE PDF
+        if (
+            !pdfBuffer ||
+            pdfBuffer.length < 1000
+        ) {
+
+            throw new Error(
+                "PDF generation failed"
+            );
+        }
+
+        // SEND PDF
+        res.writeHead(200, {
+
+            "Content-Type":
+                "application/pdf",
+
+            "Content-Disposition":
+                "attachment; filename=report.pdf",
+
+            "Content-Length":
+                pdfBuffer.length
+        });
+
+        res.end(pdfBuffer);
 
     } catch (err) {
 
+        console.error("");
+        console.error("PDF ERROR");
         console.error(err);
+        console.error("");
 
         res
         .status(500)
-        .send(err.message);
+        .send("PDF Export Failed");
+
+    } finally {
+
+        if (browser) {
+
+            await browser.close();
+        }
     }
 });
 
@@ -258,113 +380,113 @@ io.on("connection", (socket) => {
         "User connected"
     );
 
-
-    // =====================
     // LOCK CELL
-    // =====================
-    socket.on("lockCell", (cellId) => {
+    socket.on(
+        "lockCell",
+        (cellId) => {
 
-        if (lockedCells[cellId]) {
+            if (lockedCells[cellId]) {
 
-            socket.emit(
+                socket.emit(
+                    "cellLocked",
+                    cellId
+                );
+
+                return;
+            }
+
+            lockedCells[cellId] = true;
+
+            socket.broadcast.emit(
                 "cellLocked",
                 cellId
             );
-
-            return;
         }
+    );
 
-        lockedCells[cellId] = true;
-
-        socket.broadcast.emit(
-            "cellLocked",
-            cellId
-        );
-    });
-
-
-    // =====================
     // UNLOCK CELL
-    // =====================
-    socket.on("unlockCell", (cellId) => {
+    socket.on(
+        "unlockCell",
+        (cellId) => {
 
-        delete lockedCells[cellId];
+            delete lockedCells[cellId];
 
-        socket.broadcast.emit(
-            "cellUnlocked",
-            cellId
-        );
-    });
+            socket.broadcast.emit(
+                "cellUnlocked",
+                cellId
+            );
+        }
+    );
 
-
-    // =====================
-    // ADD ROW
-    // =====================
-    socket.on("addRow", (data) => {
-
-        socket.broadcast.emit(
-            "rowAdded",
-            data
-        );
-    });
-
-
-    // =====================
-    // DELETE ROW
-    // =====================
-    socket.on("deleteRow", (data) => {
-
-        socket.broadcast.emit(
-            "rowDeleted",
-            data
-        );
-    });
-
-
-    // =====================
-    // CLEAR TABLE
-    // =====================
-    socket.on("clearTable", (data) => {
-
-        socket.broadcast.emit(
-            "tableCleared",
-            data
-        );
-    });
-
-
-    // =====================
     // TYPING
-    // =====================
-    socket.on("typing", (cellId) => {
+    socket.on(
+        "typing",
+        (cellId) => {
 
-        let ip =
-            socket.handshake.address;
+            let ip =
+                socket.handshake.address;
 
-        ip = ip.replace(
-            "::ffff:",
-            ""
-        );
+            ip =
+                ip.replace(
+                    "::ffff:",
+                    ""
+                );
 
-        socket.broadcast.emit(
-            "typing",
-            {
-                cellId,
-                ip
-            }
-        );
-    });
+            socket.broadcast.emit(
+                "typing",
+                {
+                    cellId,
+                    ip
+                }
+            );
+        }
+    );
 
+    // ADD ROW
+    socket.on(
+        "addRow",
+        (data) => {
 
-    // =====================
-    // DISCONNECT
-    // =====================
-    socket.on("disconnect", () => {
+            socket.broadcast.emit(
+                "rowAdded",
+                data
+            );
+        }
+    );
 
-        console.log(
-            "User disconnected"
-        );
-    });
+    // DELETE ROW
+    socket.on(
+        "deleteRow",
+        (data) => {
+
+            socket.broadcast.emit(
+                "rowDeleted",
+                data
+            );
+        }
+    );
+
+    // CLEAR TABLE
+    socket.on(
+        "clearTable",
+        (data) => {
+
+            socket.broadcast.emit(
+                "tableCleared",
+                data
+            );
+        }
+    );
+
+    socket.on(
+        "disconnect",
+        () => {
+
+            console.log(
+                "User disconnected"
+            );
+        }
+    );
 });
 
 
@@ -376,14 +498,12 @@ const PORT = 3000;
 server.listen(PORT, () => {
 
     console.log("");
-    console.log("=======================");
+    console.log("====================");
     console.log("DOR SERVER RUNNING");
-    console.log("=======================");
+    console.log("====================");
     console.log("");
 
     console.log(
-        `http://localhost:${PORT}`
+        `http://127.0.0.1:${PORT}`
     );
-
-    console.log("");
 });
