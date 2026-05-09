@@ -60,14 +60,75 @@ function loadReportFile(date) {
             "report.json"
         );
 
-    if (!fs.existsSync(filePath)) {
+    // =====================
+    // FILE EXISTS
+    // =====================
+    if (fs.existsSync(filePath)) {
 
-        return {};
+        return JSON.parse(
+            fs.readFileSync(filePath)
+        );
     }
 
-    return JSON.parse(
-        fs.readFileSync(filePath)
+    // =====================
+    // COPY PREVIOUS DAY
+    // =====================
+    const previousDate =
+        new Date(date);
+
+    previousDate.setDate(
+        previousDate.getDate() - 1
     );
+
+    const prevDateStr =
+        previousDate
+        .toISOString()
+        .split("T")[0];
+
+    const prevFile =
+        path.join(
+            REPORT_FOLDER,
+            prevDateStr,
+            "report.json"
+        );
+
+    // previous exists
+    if (fs.existsSync(prevFile)) {
+
+        console.log(
+            `Cloning previous report: ${prevDateStr}`
+        );
+
+        const prevData =
+            JSON.parse(
+                fs.readFileSync(prevFile)
+            );
+
+        // auto create today folder
+        fs.mkdirSync(
+            dailyFolder,
+            {
+                recursive: true
+            }
+        );
+
+        // auto save today
+        fs.writeFileSync(
+            filePath,
+            JSON.stringify(
+                prevData,
+                null,
+                2
+            )
+        );
+
+        return prevData;
+    }
+
+    // =====================
+    // EMPTY
+    // =====================
+    return {};
 }
 
 
