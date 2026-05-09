@@ -558,7 +558,8 @@ socket.on("typing", (data) => {
     overlay.innerHTML = `
         <div class="typing-text">
 
-            ${data.ip} is editing
+            ${data.machineName}
+            is editing
 
             <span class="typing-dots">
                 <span>.</span>

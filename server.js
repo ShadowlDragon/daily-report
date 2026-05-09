@@ -5,6 +5,7 @@
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
+const os = require("os");
 
 const puppeteer =
     require("puppeteer");
@@ -376,6 +377,20 @@ app.get("/exportPDF", async (req, res) => {
 // =========================
 io.on("connection", (socket) => {
 
+    const machineName =
+    os.hostname();
+
+    let ip =
+        socket.handshake.address;
+
+    ip =
+        ip.replace("::ffff:", "");
+
+    socket.machineInfo = {
+        ip,
+        machineName
+    };
+
     console.log(
         "User connected"
     );
@@ -423,20 +438,17 @@ io.on("connection", (socket) => {
         "typing",
         (cellId) => {
 
-            let ip =
-                socket.handshake.address;
-
-            ip =
-                ip.replace(
-                    "::ffff:",
-                    ""
-                );
-
             socket.broadcast.emit(
                 "typing",
                 {
+
                     cellId,
-                    ip
+
+                    ip:
+                        socket.machineInfo.ip,
+
+                    machineName:
+                        socket.machineInfo.machineName
                 }
             );
         }
