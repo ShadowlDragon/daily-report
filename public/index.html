@@ -48,7 +48,7 @@
                         <td class="title-cell"
                             contenteditable="true">
 
-                            DAILY OPERATION REPORT PVD II
+                            DAILY OPERATION REPORT PVD VIII
 
                         </td>
 
@@ -59,7 +59,7 @@
 
                                 <tr>
                                     <td>PVD Doc Ref:</td>
-                                    <td>PVDII/STC</td>
+                                    <td>PVDVIII/STC</td>
                                 </tr>
 
                                 <tr>
@@ -105,7 +105,7 @@
                                 contenteditable="true"
                                 data-cell="RigName">
 
-                                PV Drilling - II
+                                PV Drilling - VIII
 
                             </td>
 
@@ -232,7 +232,7 @@
         </div>
 
     </div>
-    
+
 
     <!-- LOADING -->
     <div id="loadingScreen">
@@ -249,6 +249,42 @@
 
     </div>
 
+
+    <!-- SETTINGS BUTTON -->
+    <button id="settingsBtn">
+        <i class="fa-solid fa-gear"></i>
+    </button>
+
+    <!-- SETTINGS MODAL -->
+    <div id="settingsModal">
+
+        <div class="settings-box">
+
+            <h2>
+                Computer Name
+            </h2>
+
+            <input
+                type="text"
+                id="machineNameInput"
+                placeholder="Enter computer name"
+            >
+
+            <div class="settings-actions">
+
+                <button id="saveMachineBtn">
+                    Save
+                </button>
+
+                <button id="cancelMachineBtn">
+                    Cancel
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
 
     <!-- SOCKET -->
     <script src="/socket.io/socket.io.js"></script>

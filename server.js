@@ -24,6 +24,8 @@ const server =
 const io =
     new Server(server);
 
+const SERVER_VERSION =
+    Date.now().toString();
 
 // =========================
 // MIDDLEWARE
@@ -378,7 +380,11 @@ app.get("/exportPDF", async (req, res) => {
 io.on("connection", (socket) => {
 
     const machineName =
-    os.hostname();
+
+        socket.handshake.auth
+        ?.machineName
+
+        || "Unknown-PC";
 
     let ip =
         socket.handshake.address;
@@ -392,7 +398,7 @@ io.on("connection", (socket) => {
     };
 
     console.log(
-        "User connected"
+        socket.machineInfo.machineName + " " + socket.machineInfo.ip + " connected"
     );
 
     // LOCK CELL
@@ -495,7 +501,7 @@ io.on("connection", (socket) => {
         () => {
 
             console.log(
-                "User disconnected"
+                socket.machineInfo.machineName + " " + socket.machineInfo.ip + " disconnected"
             );
         }
     );
@@ -506,6 +512,28 @@ io.on("connection", (socket) => {
 // START SERVER
 // =========================
 const PORT = 3000;
+
+app.get(
+    "/version",
+    (req, res) => {
+
+        res.json({
+
+            version:
+                SERVER_VERSION
+        });
+    }
+);
+
+app.use((req, res, next) => {
+
+    res.setHeader(
+        "Cache-Control",
+        "no-store"
+    );
+
+    next();
+});
 
 server.listen(PORT, () => {
 

@@ -2,6 +2,145 @@
 // SCRIPT.JS
 // =========================
 
+
+// =========================
+// MACHINE NAME
+// =========================
+
+let machineName =
+    localStorage.getItem(
+        "machineName"
+    );
+
+
+// SETTINGS ELEMENTS
+const settingsModal =
+    document.getElementById(
+        "settingsModal"
+    );
+
+const machineNameInput =
+    document.getElementById(
+        "machineNameInput"
+    );
+
+const saveMachineBtn =
+    document.getElementById(
+        "saveMachineBtn"
+    );
+
+const cancelMachineBtn =
+    document.getElementById(
+        "cancelMachineBtn"
+    );
+
+
+// FIRST TIME
+if (!machineName) {
+
+    settingsModal
+    .classList.add(
+        "active"
+    );
+}
+
+
+// TEMP SOCKET NAME
+const socket = io({
+
+    auth: {
+
+        machineName:
+            machineName || "Unknown-PC"
+    }
+});
+
+
+// =========================
+// SETTINGS BUTTON
+// =========================
+
+const settingsBtn =
+    document.getElementById(
+        "settingsBtn"
+    );
+
+
+// OPEN MODAL
+settingsBtn.addEventListener(
+    "click",
+    () => {
+
+        machineNameInput.value =
+            machineName || "";
+
+        settingsModal
+        .classList.add(
+            "active"
+        );
+
+        setTimeout(() => {
+
+            machineNameInput.focus();
+
+        }, 100);
+    }
+);
+
+
+// SAVE
+saveMachineBtn.addEventListener(
+    "click",
+    () => {
+
+        const newName =
+            machineNameInput.value
+            .trim();
+
+        if (!newName)
+            return;
+
+        localStorage.setItem(
+            "machineName",
+            newName
+        );
+
+        machineName = newName;
+
+        location.reload();
+    }
+);
+
+
+// CANCEL
+cancelMachineBtn.addEventListener(
+    "click",
+    () => {
+
+        // lần đầu chưa có tên
+        if (!machineName)
+            return;
+
+        settingsModal
+        .classList.remove(
+            "active"
+        );
+    }
+);
+
+
+// ENTER = SAVE
+machineNameInput.addEventListener(
+    "keydown",
+    (e) => {
+
+        if (e.key === "Enter") {
+
+            saveMachineBtn.click();
+        }
+    }
+);
+
 const sections = [
     "Safety",
     "Drilling",
@@ -11,10 +150,9 @@ const sections = [
     "ET"
 ];
 
+let currentVersion = null;
+
 let currentTable = null;
-
-const socket = io();
-
 
 // =========================
 // DATE
@@ -660,5 +798,59 @@ async function start() {
 
     bindEditableCells();
 }
+
+// =========================
+// AUTO HARD REFRESH
+// =========================
+
+async function checkVersion() {
+
+    try {
+
+        const res =
+            await fetch(
+                "/version?t=" +
+                Date.now()
+            );
+
+        const data =
+            await res.json();
+
+        // first load
+        if (!currentVersion) {
+
+            currentVersion =
+                data.version;
+
+            return;
+        }
+
+        // server restarted
+        if (
+            currentVersion !==
+            data.version
+        ) {
+
+            console.log(
+                "New version detected"
+            );
+
+            location.reload(true);
+        }
+
+    } catch (err) {
+
+        console.error(err);
+    }
+}
+
+
+// check mỗi 5 giây
+setInterval(
+    checkVersion,
+    5000
+);
+
+checkVersion();
 
 start();
