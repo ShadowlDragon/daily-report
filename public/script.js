@@ -39,13 +39,13 @@ const cancelMachineBtn =
 if (!machineName) {
 
     settingsModal
-    .classList.add(
-        "active"
-    );
+        .classList.add(
+            "active"
+        );
 }
 
 
-// TEMP SOCKET NAME
+// SOCKET
 const socket = io({
 
     auth: {
@@ -57,8 +57,9 @@ const socket = io({
 
 
 // =========================
-// SETTINGS BUTTON
+// FLOATING TOOLS
 // =========================
+
 const floatingTools =
     document.getElementById(
         "floatingTools"
@@ -69,16 +70,20 @@ const toolToggleBtn =
         "toolToggleBtn"
     );
 
-toolToggleBtn.addEventListener(
-    "click",
-    () => {
+if (toolToggleBtn && floatingTools) {
+
+    toolToggleBtn.onclick = () => {
 
         floatingTools.classList.toggle(
             "collapsed"
         );
-    }
-);
+    };
+}
 
+
+// =========================
+// SETTINGS BUTTON
+// =========================
 
 const settingsBtn =
     document.getElementById(
@@ -95,9 +100,9 @@ settingsBtn.addEventListener(
             machineName || "";
 
         settingsModal
-        .classList.add(
-            "active"
-        );
+            .classList.add(
+                "active"
+            );
 
         setTimeout(() => {
 
@@ -108,14 +113,14 @@ settingsBtn.addEventListener(
 );
 
 
-// SAVE
+// SAVE MACHINE NAME
 saveMachineBtn.addEventListener(
     "click",
     () => {
 
         const newName =
             machineNameInput.value
-            .trim();
+                .trim();
 
         if (!newName)
             return;
@@ -132,24 +137,24 @@ saveMachineBtn.addEventListener(
 );
 
 
-// CANCEL
+// CANCEL MACHINE NAME
 cancelMachineBtn.addEventListener(
     "click",
     () => {
 
-        // lần đầu chưa có tên
+        // lần đầu chưa có tên thì không cho đóng
         if (!machineName)
             return;
 
         settingsModal
-        .classList.remove(
-            "active"
-        );
+            .classList.remove(
+                "active"
+            );
     }
 );
 
 
-// ENTER = SAVE
+// ENTER = SAVE MACHINE NAME
 machineNameInput.addEventListener(
     "keydown",
     (e) => {
@@ -161,6 +166,11 @@ machineNameInput.addEventListener(
     }
 );
 
+
+// =========================
+// CONFIG
+// =========================
+
 const sections = [
     "Safety",
     "Drilling",
@@ -170,9 +180,14 @@ const sections = [
     "ET"
 ];
 
+const DEFAULT_ROW_COUNT = 5;
+
 let currentVersion = null;
 
 let currentTable = null;
+
+let currentReportData = {};
+
 
 // =========================
 // DATE
@@ -190,18 +205,42 @@ function getToday() {
 
 
 // =========================
+// CREATE SECTION ROW
+// =========================
+function createRowHTML(section, rowNumber) {
+
+    return `
+        <td class="no"
+            style="text-align:center">
+
+            ${rowNumber}
+
+        </td>
+
+        <td
+            contenteditable="true"
+            data-cell="${section}-${rowNumber}">
+        </td>
+    `;
+}
+
+
+// =========================
 // INIT
 // =========================
-function init() {
+function init(reportData = {}) {
 
     document.getElementById("date")
-    .innerText = getToday();
+        .innerText = getToday();
 
     document.querySelectorAll(".section-block")
-    .forEach(el => el.remove());
+        .forEach(el => el.remove());
 
     const container =
         document.getElementById("report");
+
+    const savedRows =
+        reportData.__rows__ || {};
 
     sections.forEach(name => {
 
@@ -232,25 +271,19 @@ function init() {
             </tr>
         `;
 
-        for (let i = 1; i <= 5; i++) {
+        const rowCount =
+            Math.max(
+                DEFAULT_ROW_COUNT,
+                Number(savedRows[name]) || DEFAULT_ROW_COUNT
+            );
 
-            table.innerHTML += `
-                <tr>
+        for (let i = 1; i <= rowCount; i++) {
 
-                    <td class="no"
-                        style="text-align:center">
+            const row =
+                table.insertRow();
 
-                        ${i}
-
-                    </td>
-
-                    <td
-                        contenteditable="true"
-                        data-cell="${name}-${i}">
-                    </td>
-
-                </tr>
-            `;
+            row.innerHTML =
+                createRowHTML(name, i);
         }
 
         const block =
@@ -272,32 +305,92 @@ function init() {
 
 
 // =========================
-// LOAD REPORT
+// LOAD REPORT DATA
 // =========================
-async function loadReport() {
+async function loadReportData() {
 
     const date =
         document.getElementById("date")
-        .innerText;
+            .innerText || getToday();
 
     const res =
         await fetch(`/load/${date}`);
 
-    const data =
-        await res.json();
+    if (!res.ok) {
+
+        console.error(
+            await res.text()
+        );
+
+        return {};
+    }
+
+    return await res.json();
+}
+
+
+// =========================
+// APPLY REPORT DATA
+// =========================
+function applyReportData(data) {
 
     Object.keys(data)
-    .forEach(cellId => {
+        .forEach(cellId => {
 
-        const cell =
-            document.querySelector(
-                `[data-cell="${cellId}"]`
-            );
+            if (cellId === "__rows__")
+                return;
 
-        if (!cell) return;
+            const cell =
+                document.querySelector(
+                    `[data-cell="${cellId}"]`
+                );
 
-        cell.innerText =
-            data[cellId];
+            if (!cell) return;
+
+            cell.innerText =
+                data[cellId];
+        });
+}
+
+
+// =========================
+// LOAD REPORT
+// =========================
+async function loadReport() {
+
+    currentReportData =
+        await loadReportData();
+
+    applyReportData(
+        currentReportData
+    );
+}
+
+
+// =========================
+// SAVE ROW COUNT
+// =========================
+async function saveSectionRows(section, rowCount) {
+
+    const date =
+        document.getElementById("date")
+            .innerText;
+
+    await fetch("/saveRows", {
+
+        method: "POST",
+
+        headers: {
+            "Content-Type":
+                "application/json"
+        },
+
+        body: JSON.stringify({
+
+            date,
+            section,
+            rowCount
+        })
     });
 }
 
@@ -320,8 +413,8 @@ async function exportPDF() {
 
         const res =
             await fetch(
-                `/exportPDF?machineName=${encodeURIComponent(machineName)}`
-            )
+                `/exportPDF?machineName=${encodeURIComponent(machineName || "Unknown-PC")}`
+            );
 
         if (!res.ok) {
 
@@ -358,7 +451,7 @@ async function exportPDF() {
 
         const url =
             window.URL
-            .createObjectURL(blob);
+                .createObjectURL(blob);
 
         const a =
             document.createElement("a");
@@ -377,7 +470,7 @@ async function exportPDF() {
         setTimeout(() => {
 
             window.URL
-            .revokeObjectURL(url);
+                .revokeObjectURL(url);
 
         }, 1000);
 
@@ -404,20 +497,21 @@ async function exportPDF() {
 function bindTables() {
 
     document.querySelectorAll("table")
-    .forEach(table => {
+        .forEach(table => {
 
-        table.onclick = (e) => {
+            table.onclick = (e) => {
 
-            e.stopPropagation();
+                e.stopPropagation();
 
-            currentTable = table;
+                currentTable = table;
 
-            document
-                .querySelector(".controls")
-                .classList.add("active");
-        };
-    });
+                document
+                    .querySelector(".controls")
+                    .classList.add("active");
+            };
+        });
 }
+
 
 document.addEventListener("click", (e) => {
 
@@ -432,44 +526,42 @@ document.addEventListener("click", (e) => {
     }
 });
 
-document.querySelector(".controls")
-.addEventListener("click", (e) => {
 
-    e.stopPropagation();
-});
+document.querySelector(".controls")
+    .addEventListener("click", (e) => {
+
+        e.stopPropagation();
+    });
 
 
 // =========================
 // ADD ROW
 // =========================
-function addRow() {
+async function addRow() {
 
     if (!currentTable) return;
 
     const section =
         currentTable.dataset.section;
 
-    const rowCount =
+    const rowNumber =
         currentTable.rows.length;
 
     const row =
         currentTable.insertRow();
 
-    row.innerHTML = `
-        <td class="no"
-            style="text-align:center">
-
-            ${rowCount}
-
-        </td>
-
-        <td
-            contenteditable="true"
-            data-cell="${section}-${rowCount}">
-        </td>
-    `;
+    row.innerHTML =
+        createRowHTML(
+            section,
+            rowNumber
+        );
 
     bindEditableCells();
+
+    await saveSectionRows(
+        section,
+        currentTable.rows.length - 1
+    );
 
     socket.emit("addRow", {
         section
@@ -480,7 +572,7 @@ function addRow() {
 // =========================
 // DELETE ROW
 // =========================
-function deleteRow() {
+async function deleteRow() {
 
     if (!currentTable) return;
 
@@ -490,8 +582,25 @@ function deleteRow() {
     const section =
         currentTable.dataset.section;
 
+    const deletedRowNumber =
+        currentTable.rows.length - 1;
+
+    const deletedCellId =
+        `${section}-${deletedRowNumber}`;
+
     currentTable.deleteRow(
         currentTable.rows.length - 1
+    );
+
+    await saveSectionRows(
+        section,
+        currentTable.rows.length - 1
+    );
+
+    // clear content of deleted row in saved JSON
+    await saveCell(
+        deletedCellId,
+        ""
     );
 
     socket.emit("deleteRow", {
@@ -503,7 +612,7 @@ function deleteRow() {
 // =========================
 // CLEAR TABLE
 // =========================
-function clearTable() {
+async function clearTable() {
 
     if (!currentTable) return;
 
@@ -515,9 +624,18 @@ function clearTable() {
 
     for (let i = 1; i < rows.length; i++) {
 
-        rows[i]
-        .cells[1]
-        .innerText = "";
+        const cell =
+            rows[i].cells[1];
+
+        cell.innerText = "";
+
+        const cellId =
+            `${section}-${i}`;
+
+        await saveCell(
+            cellId,
+            ""
+        );
     }
 
     socket.emit("clearTable", {
@@ -529,14 +647,11 @@ function clearTable() {
 // =========================
 // SAVE CELL
 // =========================
-async function saveCell(
-    cellId,
-    value
-) {
+async function saveCell(cellId, value) {
 
     const date =
         document.getElementById("date")
-        .innerText;
+            .innerText;
 
     await fetch("/saveCell", {
 
@@ -544,7 +659,7 @@ async function saveCell(
 
         headers: {
             "Content-Type":
-            "application/json"
+                "application/json"
         },
 
         body: JSON.stringify({
@@ -563,56 +678,56 @@ async function saveCell(
 function bindEditableCells() {
 
     document
-    .querySelectorAll("[contenteditable]")
-    .forEach(cell => {
+        .querySelectorAll("[contenteditable]")
+        .forEach(cell => {
 
-        if (cell.dataset.bound)
-            return;
+            if (cell.dataset.bound)
+                return;
 
-        cell.dataset.bound = "1";
+            cell.dataset.bound = "1";
 
-        cell.addEventListener(
-            "focus",
-            () => {
+            cell.addEventListener(
+                "focus",
+                () => {
 
-                const cellId =
-                    cell.dataset.cell;
+                    const cellId =
+                        cell.dataset.cell;
 
-                if (!cellId) return;
+                    if (!cellId) return;
 
-                socket.emit(
-                    "lockCell",
-                    cellId
-                );
+                    socket.emit(
+                        "lockCell",
+                        cellId
+                    );
 
-                socket.emit(
-                    "typing",
-                    cellId
-                );
-            }
-        );
+                    socket.emit(
+                        "typing",
+                        cellId
+                    );
+                }
+            );
 
-        cell.addEventListener(
-            "blur",
-            async () => {
+            cell.addEventListener(
+                "blur",
+                async () => {
 
-                const cellId =
-                    cell.dataset.cell;
+                    const cellId =
+                        cell.dataset.cell;
 
-                if (!cellId) return;
+                    if (!cellId) return;
 
-                await saveCell(
-                    cellId,
-                    cell.innerText
-                );
+                    await saveCell(
+                        cellId,
+                        cell.innerText
+                    );
 
-                socket.emit(
-                    "unlockCell",
-                    cellId
-                );
-            }
-        );
-    });
+                    socket.emit(
+                        "unlockCell",
+                        cellId
+                    );
+                }
+            );
+        });
 }
 
 
@@ -745,7 +860,7 @@ socket.on("typing", (data) => {
 });
 
 
-// ADD ROW
+// ADD ROW FROM OTHER USER
 socket.on("rowAdded", (data) => {
 
     const table =
@@ -755,31 +870,23 @@ socket.on("rowAdded", (data) => {
 
     if (!table) return;
 
-    const rowCount =
+    const rowNumber =
         table.rows.length;
 
     const row =
         table.insertRow();
 
-    row.innerHTML = `
-        <td class="no"
-            style="text-align:center">
-
-            ${rowCount}
-
-        </td>
-
-        <td
-            contenteditable="true"
-            data-cell="${data.section}-${rowCount}">
-        </td>
-    `;
+    row.innerHTML =
+        createRowHTML(
+            data.section,
+            rowNumber
+        );
 
     bindEditableCells();
 });
 
 
-// DELETE ROW
+// DELETE ROW FROM OTHER USER
 socket.on("rowDeleted", (data) => {
 
     const table =
@@ -798,7 +905,7 @@ socket.on("rowDeleted", (data) => {
 });
 
 
-// CLEAR TABLE
+// CLEAR TABLE FROM OTHER USER
 socket.on("tableCleared", (data) => {
 
     const table =
@@ -814,80 +921,15 @@ socket.on("tableCleared", (data) => {
     for (let i = 1; i < rows.length; i++) {
 
         rows[i]
-        .cells[1]
-        .innerText = "";
+            .cells[1]
+            .innerText = "";
     }
 });
 
 
 // =========================
-// START
+// STORAGE CONFIG
 // =========================
-async function start() {
-
-    await initStorageConfig();
-
-    init();
-
-    await loadReport();
-
-    bindEditableCells();
-}
-
-// =========================
-// AUTO HARD REFRESH
-// =========================
-
-async function checkVersion() {
-
-    try {
-
-        const res =
-            await fetch(
-                "/version?t=" +
-                Date.now()
-            );
-
-        const data =
-            await res.json();
-
-        // first load
-        if (!currentVersion) {
-
-            currentVersion =
-                data.version;
-
-            return;
-        }
-
-        // server restarted
-        if (
-            currentVersion !==
-            data.version
-        ) {
-
-            console.log(
-                "New version detected"
-            );
-
-            location.reload(true);
-        }
-
-    } catch (err) {
-
-        console.error(err);
-    }
-}
-
-
-// check mỗi 5 giây
-setInterval(
-    checkVersion,
-    5000
-);
-
-checkVersion();
-
 async function initStorageConfig() {
 
     const res =
@@ -912,6 +954,7 @@ async function initStorageConfig() {
         document.getElementById("folderSettingBtn");
 
     if (!modal || !input || !saveBtn || !settingBtn) {
+
         console.error("Storage config elements missing");
         return;
     }
@@ -921,9 +964,9 @@ async function initStorageConfig() {
 
         settingBtn.style.display =
             "flex";
-    
+
     } else {
-    
+
         settingBtn.style.display =
             "none";
     }
@@ -940,9 +983,7 @@ async function initStorageConfig() {
         config.reportFolder || "";
 
 
-    // =========================
     // OPEN STORAGE MODAL
-    // =========================
     settingBtn.onclick = () => {
 
         input.value =
@@ -960,9 +1001,7 @@ async function initStorageConfig() {
     };
 
 
-    // =========================
     // SAVE STORAGE FOLDER
-    // =========================
     saveBtn.onclick = async () => {
 
         const folder =
@@ -1014,9 +1053,7 @@ async function initStorageConfig() {
     };
 
 
-    // =========================
     // CANCEL
-    // =========================
     if (cancelBtn) {
 
         cancelBtn.onclick = () => {
@@ -1032,9 +1069,7 @@ async function initStorageConfig() {
     }
 
 
-    // =========================
-    // ENTER = SAVE
-    // =========================
+    // ENTER / ESC
     input.onkeydown = (e) => {
 
         if (e.key === "Enter") {
@@ -1052,6 +1087,81 @@ async function initStorageConfig() {
             );
         }
     };
+}
+
+
+// =========================
+// AUTO HARD REFRESH
+// =========================
+
+async function checkVersion() {
+
+    try {
+
+        const res =
+            await fetch(
+                "/version?t=" +
+                Date.now()
+            );
+
+        const data =
+            await res.json();
+
+        // first load
+        if (!currentVersion) {
+
+            currentVersion =
+                data.version;
+
+            return;
+        }
+
+        // server restarted
+        if (
+            currentVersion !==
+            data.version
+        ) {
+
+            console.log(
+                "New version detected"
+            );
+
+            location.reload(true);
+        }
+
+    } catch (err) {
+
+        console.error(err);
+    }
+}
+
+
+setInterval(
+    checkVersion,
+    5000
+);
+
+checkVersion();
+
+
+// =========================
+// START
+// =========================
+async function start() {
+
+    await initStorageConfig();
+
+    document.getElementById("date")
+        .innerText = getToday();
+
+    currentReportData =
+        await loadReportData();
+
+    init(currentReportData);
+
+    applyReportData(currentReportData);
+
+    bindEditableCells();
 }
 
 

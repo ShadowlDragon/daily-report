@@ -432,6 +432,50 @@ app.get("/load/:date", (req, res) => {
 
 
 // =========================
+// SAVE ROWS
+// =========================
+
+app.post("/saveRows", (req, res) => {
+
+    try {
+
+        if (!ensureConfigured(res))
+            return;
+
+        const {
+            date,
+            section,
+            rowCount
+        } = req.body;
+
+        const reportData =
+            loadReportFile(date);
+
+        if (!reportData.__rows__) {
+            reportData.__rows__ = {};
+        }
+
+        reportData.__rows__[section] =
+            rowCount;
+
+        saveReportFile(
+            date,
+            reportData
+        );
+
+        res.send("saved");
+
+    } catch (err) {
+
+        console.error(err);
+
+        res
+            .status(500)
+            .send(err.message);
+    }
+});
+
+// =========================
 // SAVE CELL
 // =========================
 
