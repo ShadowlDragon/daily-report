@@ -286,6 +286,35 @@
 
     </div>
 
+    <button id="folderSettingBtn" class="host-only">
+        ⚙ Storage
+    </button>
+    
+    <div id="storageModal">
+        <div class="storage-box">
+            <h2>Report Storage Folder</h2>
+    
+            <p>
+                Enter the folder path where reports will be saved.
+            </p>
+    
+            <input
+                id="reportFolderInput"
+                placeholder="D:\Reports or \\server\shared\folder"
+            >
+    
+            <div class="storage-actions">
+                <button id="saveFolderBtn">
+                    Save
+                </button>
+
+                <button id="cancelFolderBtn">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- SOCKET -->
     <script src="/socket.io/socket.io.js"></script>
 

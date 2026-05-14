@@ -792,6 +792,8 @@ socket.on("tableCleared", (data) => {
 // =========================
 async function start() {
 
+    await initStorageConfig();
+
     init();
 
     await loadReport();
@@ -852,5 +854,172 @@ setInterval(
 );
 
 checkVersion();
+
+async function initStorageConfig() {
+
+    const res =
+        await fetch("/config");
+
+    const config =
+        await res.json();
+
+    const modal =
+        document.getElementById("storageModal");
+
+    const input =
+        document.getElementById("reportFolderInput");
+
+    const saveBtn =
+        document.getElementById("saveFolderBtn");
+
+    const cancelBtn =
+        document.getElementById("cancelFolderBtn");
+
+    const settingBtn =
+        document.getElementById("folderSettingBtn");
+
+    if (!modal || !input || !saveBtn || !settingBtn) {
+        console.error("Storage config elements missing");
+        return;
+    }
+
+    // chỉ máy host mới thấy nút Storage
+    if (config.isHost) {
+
+        settingBtn.style.display =
+            "block";
+
+    } else {
+
+        settingBtn.style.display =
+            "none";
+    }
+
+    // lần đầu chưa có config thì bắt host chọn folder
+    if (!config.hasConfig && config.isHost) {
+
+        modal.classList.add(
+            "active"
+        );
+    }
+
+    input.value =
+        config.reportFolder || "";
+
+
+    // =========================
+    // OPEN STORAGE MODAL
+    // =========================
+    settingBtn.onclick = () => {
+
+        input.value =
+            config.reportFolder || "";
+
+        modal.classList.add(
+            "active"
+        );
+
+        setTimeout(() => {
+
+            input.focus();
+
+        }, 100);
+    };
+
+
+    // =========================
+    // SAVE STORAGE FOLDER
+    // =========================
+    saveBtn.onclick = async () => {
+
+        const folder =
+            input.value.trim();
+
+        if (!folder) {
+
+            alert(
+                "Please enter folder path"
+            );
+
+            return;
+        }
+
+        const saveRes =
+            await fetch("/config", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
+
+                body: JSON.stringify({
+                    reportFolder:
+                        folder
+                })
+            });
+
+        if (!saveRes.ok) {
+
+            alert(
+                await saveRes.text()
+            );
+
+            return;
+        }
+
+        modal.classList.remove(
+            "active"
+        );
+
+        alert(
+            "Storage folder saved"
+        );
+
+        location.reload();
+    };
+
+
+    // =========================
+    // CANCEL
+    // =========================
+    if (cancelBtn) {
+
+        cancelBtn.onclick = () => {
+
+            // nếu lần đầu chưa setup thì không cho đóng
+            if (!config.hasConfig)
+                return;
+
+            modal.classList.remove(
+                "active"
+            );
+        };
+    }
+
+
+    // =========================
+    // ENTER = SAVE
+    // =========================
+    input.onkeydown = (e) => {
+
+        if (e.key === "Enter") {
+
+            saveBtn.click();
+        }
+
+        if (e.key === "Escape") {
+
+            if (!config.hasConfig)
+                return;
+
+            modal.classList.remove(
+                "active"
+            );
+        }
+    };
+}
+
 
 start();
