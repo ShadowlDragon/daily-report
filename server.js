@@ -118,6 +118,8 @@ function getLocalIP() {
     const interfaces =
         os.networkInterfaces();
 
+    const candidates = [];
+
     for (const name in interfaces) {
 
         for (const iface of interfaces[name]) {
@@ -127,9 +129,41 @@ function getLocalIP() {
                 !iface.internal
             ) {
 
-                return iface.address;
+                candidates.push({
+                    name,
+                    address: iface.address
+                });
             }
         }
+    }
+
+    // bỏ qua Windows hotspot / ICS thường dùng IP này
+    const filtered =
+        candidates.filter(item =>
+            item.address !== "192.168.137.1"
+        );
+
+    // ưu tiên Wi-Fi thật
+    const wifi =
+        filtered.find(item =>
+            item.name.toLowerCase().includes("wi-fi") ||
+            item.name.toLowerCase().includes("wireless")
+        );
+
+    if (wifi) {
+        return wifi.address;
+    }
+
+    // fallback lấy IP private LAN
+    const lan =
+        filtered.find(item =>
+            item.address.startsWith("192.168.") ||
+            item.address.startsWith("172.") ||
+            item.address.startsWith("10.")
+        );
+
+    if (lan) {
+        return lan.address;
     }
 
     return "127.0.0.1";
@@ -458,6 +492,30 @@ app.get("/exportPDF", async (req, res) => {
 
     let browser;
 
+    const ip =
+    req.ip
+        .replace("::ffff:", "");
+
+        const machineName =
+            req.query.machineName ||
+            "Unknown-PC";
+
+        console.log("");
+        console.log("================================");
+        console.log("PDF EXPORT REQUEST");
+        console.log("================================");
+        console.log("");
+
+        console.log(
+            `Machine: ${machineName}`
+        );
+
+        console.log(
+            `IP: ${ip}`
+        );
+
+        console.log("");
+
     try {
 
         if (!ensureConfigured(res))
@@ -499,41 +557,42 @@ app.get("/exportPDF", async (req, res) => {
 
         await page.evaluate(() => {
 
-            const controls =
-                document.querySelector(
-                    ".controls"
-                );
-
-            if (controls) {
-
-                controls.style.display =
-                    "none";
-            }
-
-            const loading =
-                document.querySelector(
-                    "#loadingScreen"
-                );
-
-            if (loading) {
-
-                loading.style.display =
-                    "none";
-            }
-
-            const storage =
-                document.querySelector(
-                    "#folderSettingBtn"
-                );
-
-            if (storage) {
-
-                storage.style.display =
-                    "none";
-            }
+            const hideSelectors = [
+                ".controls",
+                "#floatingTools",
+                "#settingsBtn",
+                "#folderSettingBtn",
+                "#quickPdfBtn",
+                "#settingsModal",
+                "#storageModal",
+                "#loadingScreen",
+                ".typing-overlay"
+            ];
+        
+            hideSelectors.forEach(selector => {
+        
+                document
+                    .querySelectorAll(selector)
+                    .forEach(el => {
+        
+                        el.style.display =
+                            "none";
+        
+                        el.classList.remove(
+                            "active"
+                        );
+                    });
+            });
+        
+            // bỏ blur/dim background nếu modal đang active
+            document.body.style.filter =
+                "none";
+        
+            document.documentElement.style.filter =
+                "none";
         });
 
-        const pdfBuffer =
+        const pdfData =
             await page.pdf({
 
                 format: "A4",
@@ -551,6 +610,14 @@ app.get("/exportPDF", async (req, res) => {
                     right: "10mm"
                 }
             });
+
+        const pdfBuffer =
+            Buffer.from(pdfData);
+
+        console.log(
+            "PDF SIZE:",
+            pdfBuffer.length
+        );
 
         console.log(
             "PDF SIZE:",

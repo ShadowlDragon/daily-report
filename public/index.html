@@ -6,8 +6,10 @@
     <meta charset="UTF-8">
 
     <title>
-        DOR Report
+        Daily Operation Report
     </title>
+
+    <link rel="icon" type="image/jpeg" href="logo.png">
 
     <!-- CSS -->
     <link rel="stylesheet" href="style.css">
@@ -39,7 +41,7 @@
                         <td class="logo-cell">
 
                             <img
-                                src="logo.jpg"
+                                src="logo.png"
                                 crossorigin="anonymous">
 
                         </td>
@@ -47,9 +49,7 @@
                         <!-- TITLE -->
                         <td class="title-cell"
                             contenteditable="true">
-
                             DAILY OPERATION REPORT PVD VIII
-
                         </td>
 
                         <!-- INFO -->
@@ -104,9 +104,7 @@
                             <td
                                 contenteditable="true"
                                 data-cell="RigName">
-
                                 PV Drilling - VIII
-
                             </td>
 
                             <td>
@@ -126,9 +124,7 @@
                             <td
                                 contenteditable="true"
                                 data-cell="TotalPOB">
-
                                 POB =120
-
                             </td>
 
                             <td>
@@ -138,9 +134,7 @@
                             <td
                                 contenteditable="true"
                                 data-cell="Operator">
-
                                 PERTAMINA
-
                             </td>
 
                         </tr>
@@ -155,9 +149,7 @@
                                 colspan="3"
                                 contenteditable="true"
                                 data-cell="CurrentActivities">
-
                                 Slick-line on LLA - 2
-
                             </td>
 
                         </tr>
@@ -215,20 +207,6 @@
 
             </button>
 
-
-            <!-- PDF -->
-            <button onclick="exportPDF()">
-
-                <span class="icon">
-                    <i class="fa-solid fa-file-pdf"></i>
-                </span>
-
-                <span class="label">
-                    Export PDF
-                </span>
-
-            </button>
-
         </div>
 
     </div>
@@ -248,12 +226,6 @@
         </div>
 
     </div>
-
-
-    <!-- SETTINGS BUTTON -->
-    <button id="settingsBtn">
-        <i class="fa-solid fa-gear"></i>
-    </button>
 
     <!-- SETTINGS MODAL -->
     <div id="settingsModal">
@@ -286,9 +258,28 @@
 
     </div>
 
-    <button id="folderSettingBtn" class="host-only">
-        ⚙ Storage
-    </button>
+    <div id="floatingTools" class="floating-tools collapsed">
+
+        <button id="toolToggleBtn" class="tool-main">
+            <i class="fa-solid fa-gear"></i>
+        </button>
+    
+        <button id="quickPdfBtn" class="tool-btn" onclick="exportPDF()">
+            <i class="fa-solid fa-file-pdf"></i>
+            <span class="tooltip">Export PDF</span>
+        </button>
+    
+        <button id="folderSettingBtn" class="tool-btn host-only">
+            <i class="fa-solid fa-folder-open"></i>
+            <span class="tooltip">Storage</span>
+        </button>
+    
+        <button id="settingsBtn" class="tool-btn">
+            <i class="fa-solid fa-user-gear"></i>
+            <span class="tooltip">Computer Name</span>
+        </button>
+    
+    </div>
     
     <div id="storageModal">
         <div class="storage-box">

@@ -59,6 +59,26 @@ const socket = io({
 // =========================
 // SETTINGS BUTTON
 // =========================
+const floatingTools =
+    document.getElementById(
+        "floatingTools"
+    );
+
+const toolToggleBtn =
+    document.getElementById(
+        "toolToggleBtn"
+    );
+
+toolToggleBtn.addEventListener(
+    "click",
+    () => {
+
+        floatingTools.classList.toggle(
+            "collapsed"
+        );
+    }
+);
+
 
 const settingsBtn =
     document.getElementById(
@@ -299,7 +319,9 @@ async function exportPDF() {
         );
 
         const res =
-            await fetch("/exportPDF");
+            await fetch(
+                `/exportPDF?machineName=${encodeURIComponent(machineName)}`
+            )
 
         if (!res.ok) {
 
@@ -311,14 +333,25 @@ async function exportPDF() {
             return;
         }
 
+        const contentType =
+            res.headers.get("Content-Type") || "";
+
         const blob =
             await res.blob();
 
-        if (blob.size < 1000) {
+        if (!contentType.includes("application/pdf")) {
 
-            alert(
-                "Invalid PDF generated"
-            );
+            const text =
+                await blob.text();
+
+            alert(text || "Invalid PDF response");
+
+            return;
+        }
+
+        if (blob.size < 500) {
+
+            alert("PDF file is too small");
 
             return;
         }
@@ -887,10 +920,10 @@ async function initStorageConfig() {
     if (config.isHost) {
 
         settingBtn.style.display =
-            "block";
-
+            "flex";
+    
     } else {
-
+    
         settingBtn.style.display =
             "none";
     }
