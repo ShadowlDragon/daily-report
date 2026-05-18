@@ -203,6 +203,17 @@ function getToday() {
     );
 }
 
+function getDisplayToday() {
+
+    const today = new Date();
+
+    return (
+        String(today.getDate()).padStart(2, "0") + "/" +
+        String(today.getMonth() + 1).padStart(2, "0") + "/" +
+        today.getFullYear()
+    );
+}
+
 
 // =========================
 // CREATE SECTION ROW
@@ -231,7 +242,7 @@ function createRowHTML(section, rowNumber) {
 function init(reportData = {}) {
 
     document.getElementById("date")
-        .innerText = getToday();
+        .innerText = getDisplayToday();
 
     document.querySelectorAll(".section-block")
         .forEach(el => el.remove());
@@ -310,8 +321,7 @@ function init(reportData = {}) {
 async function loadReportData() {
 
     const date =
-        document.getElementById("date")
-            .innerText || getToday();
+        getToday();
 
     const res =
         await fetch(`/load/${date}`);
@@ -373,8 +383,7 @@ async function loadReport() {
 async function saveSectionRows(section, rowCount) {
 
     const date =
-        document.getElementById("date")
-            .innerText;
+        getToday();
 
     await fetch("/saveRows", {
 
@@ -650,8 +659,7 @@ async function clearTable() {
 async function saveCell(cellId, value) {
 
     const date =
-        document.getElementById("date")
-            .innerText;
+        getToday();
 
     await fetch("/saveCell", {
 
@@ -1152,7 +1160,7 @@ async function start() {
     await initStorageConfig();
 
     document.getElementById("date")
-        .innerText = getToday();
+        .innerText = getDisplayToday();
 
     currentReportData =
         await loadReportData();

@@ -10,6 +10,7 @@ const os = require("os");
 const puppeteer = require("puppeteer");
 const fs = require("fs");
 const path = require("path");
+const schedule = require("node-schedule");
 
 const app = express();
 const server = http.createServer(app);
@@ -137,13 +138,11 @@ function getLocalIP() {
         }
     }
 
-    // bỏ qua Windows hotspot / ICS thường dùng IP này
     const filtered =
         candidates.filter(item =>
             item.address !== "192.168.137.1"
         );
 
-    // ưu tiên Wi-Fi thật
     const wifi =
         filtered.find(item =>
             item.name.toLowerCase().includes("wi-fi") ||
@@ -154,7 +153,6 @@ function getLocalIP() {
         return wifi.address;
     }
 
-    // fallback lấy IP private LAN
     const lan =
         filtered.find(item =>
             item.address.startsWith("192.168.") ||
@@ -181,6 +179,53 @@ function ensureConfigured(res) {
     }
 
     return true;
+}
+
+function getToday() {
+
+    const today = new Date();
+
+    return (
+        today.getFullYear() + "-" +
+        String(today.getMonth() + 1).padStart(2, "0") + "-" +
+        String(today.getDate()).padStart(2, "0")
+    );
+}
+
+function getTimeStamp() {
+
+    const now = new Date();
+
+    return (
+        String(now.getHours()).padStart(2, "0") + "-" +
+        String(now.getMinutes()).padStart(2, "0")
+    );
+}
+
+function getDailyFolder(date) {
+
+    return path.join(
+        REPORT_FOLDER,
+        date
+    );
+}
+
+function ensureDailyFolder(date) {
+
+    const dailyFolder =
+        getDailyFolder(date);
+
+    if (!fs.existsSync(dailyFolder)) {
+
+        fs.mkdirSync(
+            dailyFolder,
+            {
+                recursive: true
+            }
+        );
+    }
+
+    return dailyFolder;
 }
 
 
@@ -372,17 +417,7 @@ function loadReportFile(date) {
 function saveReportFile(date, data) {
 
     const dailyFolder =
-        path.join(REPORT_FOLDER, date);
-
-    if (!fs.existsSync(dailyFolder)) {
-
-        fs.mkdirSync(
-            dailyFolder,
-            {
-                recursive: true
-            }
-        );
-    }
+        ensureDailyFolder(date);
 
     const filePath =
         path.join(
@@ -475,6 +510,7 @@ app.post("/saveRows", (req, res) => {
     }
 });
 
+
 // =========================
 // SAVE CELL
 // =========================
@@ -529,44 +565,18 @@ app.post("/saveCell", (req, res) => {
 
 
 // =========================
-// EXPORT PDF
+// PDF GENERATOR
 // =========================
 
-app.get("/exportPDF", async (req, res) => {
+async function generatePDFBuffer(sourceName = "Unknown-PC") {
 
     let browser;
 
-    const ip =
-    req.ip
-        .replace("::ffff:", "");
-
-        const machineName =
-            req.query.machineName ||
-            "Unknown-PC";
-
-        console.log("");
-        console.log("================================");
-        console.log("PDF EXPORT REQUEST");
-        console.log("================================");
-        console.log("");
-
-        console.log(
-            `Machine: ${machineName}`
-        );
-
-        console.log(
-            `IP: ${ip}`
-        );
-
-        console.log("");
-
     try {
-
-        if (!ensureConfigured(res))
-            return;
 
         console.log("");
         console.log("START EXPORT PDF");
+        console.log("Source:", sourceName);
 
         browser =
             await puppeteer.launch({
@@ -583,6 +593,14 @@ app.get("/exportPDF", async (req, res) => {
 
         const page =
             await browser.newPage();
+
+        await page.evaluateOnNewDocument(() => {
+
+            localStorage.setItem(
+                "machineName",
+                "PDF-Exporter"
+            );
+        });
 
         await page.goto(
             `http://127.0.0.1:${PORT}`,
@@ -612,26 +630,25 @@ app.get("/exportPDF", async (req, res) => {
                 "#loadingScreen",
                 ".typing-overlay"
             ];
-        
+
             hideSelectors.forEach(selector => {
-        
+
                 document
                     .querySelectorAll(selector)
                     .forEach(el => {
-        
+
                         el.style.display =
                             "none";
-        
+
                         el.classList.remove(
                             "active"
                         );
                     });
             });
-        
-            // bỏ blur/dim background nếu modal đang active
+
             document.body.style.filter =
                 "none";
-        
+
             document.documentElement.style.filter =
                 "none";
         });
@@ -663,11 +680,6 @@ app.get("/exportPDF", async (req, res) => {
             pdfBuffer.length
         );
 
-        console.log(
-            "PDF SIZE:",
-            pdfBuffer.length
-        );
-
         if (
             !pdfBuffer ||
             pdfBuffer.length < 1000
@@ -677,6 +689,104 @@ app.get("/exportPDF", async (req, res) => {
                 "PDF generation failed"
             );
         }
+
+        return pdfBuffer;
+
+    } finally {
+
+        if (browser) {
+
+            await browser.close();
+        }
+    }
+}
+
+async function saveAutoPDF() {
+
+    try {
+
+        if (!REPORT_FOLDER) {
+
+            console.log(
+                "AUTO PDF SKIPPED: REPORT_FOLDER is not configured"
+            );
+
+            return;
+        }
+
+        const date =
+            getToday();
+
+        const dailyFolder =
+            ensureDailyFolder(date);
+
+        const pdfBuffer =
+            await generatePDFBuffer(
+                "AUTO-6PM"
+            );
+
+        const fileName =
+            `DOR-${date}-${getTimeStamp()}.pdf`;
+
+        const pdfPath =
+            path.join(
+                dailyFolder,
+                fileName
+            );
+
+        fs.writeFileSync(
+            pdfPath,
+            pdfBuffer
+        );
+
+        console.log("");
+        console.log("================================");
+        console.log("AUTO PDF SAVED");
+        console.log("================================");
+        console.log(pdfPath);
+        console.log("");
+
+    } catch (err) {
+
+        console.error("");
+        console.error("AUTO PDF ERROR");
+        console.error(err);
+        console.error("");
+    }
+}
+
+
+// =========================
+// EXPORT PDF API
+// =========================
+
+app.get("/exportPDF", async (req, res) => {
+
+    const ip =
+        (req.ip || "")
+            .replace("::ffff:", "");
+
+    const machineName =
+        req.query.machineName ||
+        "Unknown-PC";
+
+    console.log("");
+    console.log("================================");
+    console.log("PDF EXPORT REQUEST");
+    console.log("================================");
+    console.log(`Machine: ${machineName}`);
+    console.log(`IP: ${ip}`);
+    console.log("");
+
+    try {
+
+        if (!ensureConfigured(res))
+            return;
+
+        const pdfBuffer =
+            await generatePDFBuffer(
+                machineName
+            );
 
         res.writeHead(200, {
 
@@ -702,15 +812,27 @@ app.get("/exportPDF", async (req, res) => {
         res
             .status(500)
             .send("PDF Export Failed");
-
-    } finally {
-
-        if (browser) {
-
-            await browser.close();
-        }
     }
 });
+
+
+// =========================
+// SCHEDULE AUTO PDF 6PM
+// =========================
+
+schedule.scheduleJob(
+    "0 18 * * *",
+    async () => {
+
+        console.log("");
+        console.log("================================");
+        console.log("6PM AUTO PDF EXPORT");
+        console.log("================================");
+        console.log("");
+
+        await saveAutoPDF();
+    }
+);
 
 
 // =========================
@@ -884,6 +1006,9 @@ server.listen(
             "NOT CONFIGURED YET"
         );
 
+        console.log("");
+        console.log("AUTO PDF:");
+        console.log("Enabled daily at 18:00");
         console.log("");
     }
 );
