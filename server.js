@@ -7,9 +7,19 @@ const http = require("http");
 const { Server } = require("socket.io");
 
 const os = require("os");
-const puppeteer = require("puppeteer");
 const fs = require("fs");
-const path = require("path");
+const path =
+    require("path");
+
+process.env.PUPPETEER_CACHE_DIR =
+    path.join(
+        __dirname,
+        ".cache",
+        "puppeteer"
+    );
+
+const puppeteer =
+    require("puppeteer");
 const schedule = require("node-schedule");
 
 const app = express();
@@ -817,16 +827,16 @@ app.get("/exportPDF", async (req, res) => {
 
 
 // =========================
-// SCHEDULE AUTO PDF 6PM
+// SCHEDULE AUTO PDF 3PM
 // =========================
 
 schedule.scheduleJob(
-    "0 18 * * *",
+    "0 15 * * *", //Export PDF time
     async () => {
 
         console.log("");
         console.log("================================");
-        console.log("6PM AUTO PDF EXPORT");
+        console.log("3PM AUTO PDF EXPORT");
         console.log("================================");
         console.log("");
 
