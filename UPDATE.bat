@@ -8,12 +8,25 @@ echo Updating DOR...
 echo.
 
 set "GIT=portable-git\PortableGit\bin\git.exe"
+set "BACKUP=.runtime_backup"
 
 if not exist "%GIT%" (
     echo Git not found.
     pause
     exit /b 1
 )
+
+echo Backing up runtime files...
+
+if exist "%BACKUP%" rmdir /s /q "%BACKUP%"
+mkdir "%BACKUP%"
+
+if exist "node.exe" copy "node.exe" "%BACKUP%\node.exe" >nul
+if exist "node_modules" robocopy "node_modules" "%BACKUP%\node_modules" /E >nul
+if exist ".cache" robocopy ".cache" "%BACKUP%\.cache" /E >nul
+if exist "portable-git" robocopy "portable-git" "%BACKUP%\portable-git" /E >nul
+if exist "config.json" copy "config.json" "%BACKUP%\config.json" >nul
+if exist "reports" robocopy "reports" "%BACKUP%\reports" /E >nul
 
 echo Fetching latest update...
 "%GIT%" fetch origin
@@ -33,8 +46,16 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo Cleaning extra files...
-"%GIT%" clean -fd -e node_modules -e .cache -e portable-git -e node.exe -e config.json -e reports
+echo Restoring runtime files...
+
+if exist "%BACKUP%\node.exe" copy "%BACKUP%\node.exe" "node.exe" >nul
+if exist "%BACKUP%\node_modules" robocopy "%BACKUP%\node_modules" "node_modules" /E >nul
+if exist "%BACKUP%\.cache" robocopy "%BACKUP%\.cache" ".cache" /E >nul
+if exist "%BACKUP%\portable-git" robocopy "%BACKUP%\portable-git" "portable-git" /E >nul
+if exist "%BACKUP%\config.json" copy "%BACKUP%\config.json" "config.json" >nul
+if exist "%BACKUP%\reports" robocopy "%BACKUP%\reports" "reports" /E >nul
+
+rmdir /s /q "%BACKUP%"
 
 echo.
 echo Update complete.
