@@ -23,7 +23,10 @@ if not exist "%GIT%" (
 "%GIT%" clean -fd ^
 -e node_modules ^
 -e .cache ^
--e portable-git
+-e portable-git ^
+-e node.exe ^
+-e reports ^
+-e config.json
 
 echo.
 echo Update complete.
