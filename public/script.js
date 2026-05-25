@@ -198,7 +198,9 @@ const sections = [
     "Marine",
     "Mechanic",
     "Electrician",
-    "ET"
+    "ET",
+    "MC",
+    "Medic"
 ];
 
 const DEFAULT_ROW_COUNT = 5;
