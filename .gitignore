@@ -1,6 +1,6 @@
 node_modules/
 .cache/
 portable-git/
-reports/
-config.json
 node.exe
+config.json
+reports/
