@@ -45,6 +45,7 @@ const CONFIG_PATH =
     path.join(__dirname, "config.json");
 
 let REPORT_FOLDER = "";
+let RIG_NAME = "";
 
 function isLocalRequest(req) {
 
@@ -81,18 +82,23 @@ function loadConfig() {
         REPORT_FOLDER =
             config.reportFolder || "";
 
+        RIG_NAME =
+            config.rigName || "";
+
     } catch (err) {
 
         console.error("CONFIG LOAD ERROR:");
         console.error(err);
 
         REPORT_FOLDER = "";
+        RIG_NAME = "";
     }
 }
 
-function saveConfig(folder) {
+function saveConfig(folder, rigName) {
 
     REPORT_FOLDER = folder;
+    RIG_NAME = rigName;
 
     if (!fs.existsSync(REPORT_FOLDER)) {
 
@@ -108,8 +114,8 @@ function saveConfig(folder) {
         CONFIG_PATH,
         JSON.stringify(
             {
-                reportFolder:
-                    REPORT_FOLDER
+                reportFolder: REPORT_FOLDER,
+                rigName: RIG_NAME
             },
             null,
             2
@@ -269,10 +275,12 @@ app.get("/config", (req, res) => {
     res.json({
 
         hasConfig:
-            !!REPORT_FOLDER,
+        !!REPORT_FOLDER && !!RIG_NAME,
 
         reportFolder:
             REPORT_FOLDER,
+        rigName:
+            RIG_NAME,
 
         isHost:
             isLocalRequest(req)
@@ -291,7 +299,8 @@ app.post("/config", (req, res) => {
     }
 
     const {
-        reportFolder
+        reportFolder,
+        rigName
     } = req.body;
 
     if (!reportFolder) {
@@ -301,9 +310,16 @@ app.post("/config", (req, res) => {
             .send("Missing report folder");
     }
 
+    if (!rigName) {
+
+        return res
+            .status(400)
+            .send("Missing rig name");
+    }
+
     try {
 
-        saveConfig(reportFolder);
+        saveConfig(reportFolder, rigName);
 
         res.send("saved");
 
@@ -1018,7 +1034,7 @@ server.listen(
 
         console.log("");
         console.log("AUTO PDF:");
-        console.log("Enabled daily at 18:00");
+        console.log("Enabled daily at 15:00");
         console.log("");
     }
 );

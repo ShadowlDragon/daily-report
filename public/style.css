@@ -32,16 +32,11 @@ body {
 ========================= */
 
 .layout {
+    width: 100%;
 
-    width: fit-content;
+    margin: 20px 0;
 
-    margin: 20px auto;
-
-    display: flex;
-
-    align-items: flex-start;
-
-    gap: 20px;
+    display: block;
 }
 
 
@@ -50,7 +45,6 @@ body {
 ========================= */
 
 .page {
-
     width: 794px;
 
     background: white;
@@ -58,6 +52,8 @@ body {
     padding: 20px;
 
     box-sizing: border-box;
+
+    margin: 0 auto;
 
     box-shadow:
         0 0 10px rgba(0,0,0,0.08);
@@ -216,17 +212,16 @@ td[contenteditable] {
 ========================= */
 
 .controls {
+    position: fixed;
 
-    position: sticky;
-
-    width: 150px;
-
-    top: 50vh;
+    right: calc(50% - 580px);
+    top: 50%;
 
     transform: translateY(-50%);
 
-    display: flex;
+    width: 160px;
 
+    display: flex;
     flex-direction: column;
 
     gap: 12px;
@@ -236,6 +231,8 @@ td[contenteditable] {
     pointer-events: none;
 
     transition: all 0.25s ease;
+
+    z-index: 99998;
 }
 
 .controls.active {
@@ -1013,4 +1010,12 @@ td {
 
 #cancelFolderBtn:hover {
     background: #e5e7eb;
+}
+
+.storage-label {
+    display: block;
+    margin: 14px 0 6px;
+    font-size: 14px;
+    font-weight: bold;
+    color: #111827;
 }

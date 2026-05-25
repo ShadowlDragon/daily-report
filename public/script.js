@@ -72,12 +72,33 @@ const toolToggleBtn =
 
 if (toolToggleBtn && floatingTools) {
 
-    toolToggleBtn.onclick = () => {
+    toolToggleBtn.onclick = (e) => {
+
+        e.stopPropagation();
 
         floatingTools.classList.toggle(
             "collapsed"
         );
     };
+}
+
+if (floatingTools && toolToggleBtn) {
+
+    document.addEventListener(
+        "click",
+        (e) => {
+
+            if (
+                !floatingTools.contains(e.target) &&
+                !toolToggleBtn.contains(e.target)
+            ) {
+
+                floatingTools.classList.add(
+                    "collapsed"
+                );
+            }
+        }
+    );
 }
 
 
@@ -188,6 +209,8 @@ let currentTable = null;
 
 let currentReportData = {};
 
+let currentRigName = "";
+
 
 // =========================
 // DATE
@@ -212,6 +235,61 @@ function getDisplayToday() {
         String(today.getMonth() + 1).padStart(2, "0") + "/" +
         today.getFullYear()
     );
+}
+
+
+// =========================
+// RIG NAME
+// =========================
+function applyRigName(rigName) {
+
+    if (!rigName)
+        return;
+
+    currentRigName = rigName;
+
+    document.title =
+        `${rigName} Daily Operation Report`;
+
+    // Preferred explicit placeholders
+    document
+        .querySelectorAll("[data-rig-name]")
+        .forEach(el => {
+
+            el.innerText =
+                rigName;
+        });
+
+    document
+        .querySelectorAll("[data-rig-title]")
+        .forEach(el => {
+
+            el.innerText =
+                `DAILY OPERATION REPORT ${rigName}`;
+        });
+
+    // Fallback for your current HTML
+    const titleCell =
+        document.querySelector(
+            ".title-cell"
+        );
+
+    if (titleCell) {
+
+        titleCell.innerText =
+            `DAILY OPERATION REPORT ${rigName}`;
+    }
+
+    const rigNameCell =
+        document.querySelector(
+            `[data-cell="RigName"]`
+        );
+
+    if (rigNameCell) {
+
+        rigNameCell.innerText =
+            rigName;
+    }
 }
 
 
@@ -309,6 +387,10 @@ function init(reportData = {}) {
         container.appendChild(block);
     });
 
+    applyRigName(
+        currentRigName
+    );
+
     bindTables();
 
     bindEditableCells();
@@ -357,9 +439,25 @@ function applyReportData(data) {
 
             if (!cell) return;
 
+            // RigName is controlled by config
+            if (cellId === "RigName") {
+
+                if (currentRigName) {
+
+                    cell.innerText =
+                        currentRigName;
+                }
+
+                return;
+            }
+
             cell.innerText =
                 data[cellId];
         });
+
+    applyRigName(
+        currentRigName
+    );
 }
 
 
@@ -505,7 +603,7 @@ async function exportPDF() {
 // =========================
 function bindTables() {
 
-    document.querySelectorAll("table")
+    document.querySelectorAll("table[data-section]")
         .forEach(table => {
 
             table.onclick = (e) => {
@@ -525,13 +623,15 @@ function bindTables() {
 document.addEventListener("click", (e) => {
 
     if (
-        !e.target.closest("table") &&
+        !e.target.closest("table[data-section]") &&
         !e.target.closest(".controls")
     ) {
 
         document
             .querySelector(".controls")
             .classList.remove("active");
+
+        currentTable = null;
     }
 });
 
@@ -658,6 +758,11 @@ async function clearTable() {
 // =========================
 async function saveCell(cellId, value) {
 
+    // Rig name is controlled by config, not daily report data
+    if (cellId === "RigName") {
+        return;
+    }
+
     const date =
         getToday();
 
@@ -752,6 +857,15 @@ socket.on("cellUpdated", (data) => {
         );
 
     if (!cell) return;
+
+    if (data.cellId === "RigName") {
+
+        applyRigName(
+            currentRigName
+        );
+
+        return;
+    }
 
     if (document.activeElement === cell)
         return;
@@ -952,6 +1066,9 @@ async function initStorageConfig() {
     const input =
         document.getElementById("reportFolderInput");
 
+    const rigInput =
+        document.getElementById("rigNameInput");
+
     const saveBtn =
         document.getElementById("saveFolderBtn");
 
@@ -961,11 +1078,18 @@ async function initStorageConfig() {
     const settingBtn =
         document.getElementById("folderSettingBtn");
 
-    if (!modal || !input || !saveBtn || !settingBtn) {
+    if (!modal || !input || !rigInput || !saveBtn || !settingBtn) {
 
         console.error("Storage config elements missing");
         return;
     }
+
+    currentRigName =
+        config.rigName || "";
+
+    applyRigName(
+        currentRigName
+    );
 
     // chỉ máy host mới thấy nút Storage
     if (config.isHost) {
@@ -979,7 +1103,7 @@ async function initStorageConfig() {
             "none";
     }
 
-    // lần đầu chưa có config thì bắt host chọn folder
+    // lần đầu chưa có config thì bắt host chọn folder + rig name
     if (!config.hasConfig && config.isHost) {
 
         modal.classList.add(
@@ -990,6 +1114,9 @@ async function initStorageConfig() {
     input.value =
         config.reportFolder || "";
 
+    rigInput.value =
+        config.rigName || "";
+
 
     // OPEN STORAGE MODAL
     settingBtn.onclick = () => {
@@ -997,28 +1124,52 @@ async function initStorageConfig() {
         input.value =
             config.reportFolder || "";
 
+        rigInput.value =
+            currentRigName ||
+            config.rigName ||
+            "";
+
         modal.classList.add(
             "active"
         );
 
         setTimeout(() => {
 
-            input.focus();
+            if (!input.value) {
+
+                input.focus();
+
+            } else {
+
+                rigInput.focus();
+            }
 
         }, 100);
     };
 
 
-    // SAVE STORAGE FOLDER
+    // SAVE STORAGE FOLDER + RIG NAME
     saveBtn.onclick = async () => {
 
         const folder =
             input.value.trim();
 
+        const rigName =
+            rigInput.value.trim();
+
         if (!folder) {
 
             alert(
                 "Please enter folder path"
+            );
+
+            return;
+        }
+
+        if (!rigName) {
+
+            alert(
+                "Please enter rig name"
             );
 
             return;
@@ -1036,7 +1187,9 @@ async function initStorageConfig() {
 
                 body: JSON.stringify({
                     reportFolder:
-                        folder
+                        folder,
+                    rigName:
+                        rigName
                 })
             });
 
@@ -1049,12 +1202,19 @@ async function initStorageConfig() {
             return;
         }
 
+        currentRigName =
+            rigName;
+
+        applyRigName(
+            currentRigName
+        );
+
         modal.classList.remove(
             "active"
         );
 
         alert(
-            "Storage folder saved"
+            "Configuration saved"
         );
 
         location.reload();
@@ -1078,7 +1238,7 @@ async function initStorageConfig() {
 
 
     // ENTER / ESC
-    input.onkeydown = (e) => {
+    modal.onkeydown = (e) => {
 
         if (e.key === "Enter") {
 
@@ -1168,6 +1328,8 @@ async function start() {
     init(currentReportData);
 
     applyReportData(currentReportData);
+
+    applyRigName(currentRigName);
 
     bindEditableCells();
 }

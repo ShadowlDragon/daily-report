@@ -47,9 +47,8 @@
                         </td>
 
                         <!-- TITLE -->
-                        <td class="title-cell"
-                            contenteditable="true">
-                            DAILY OPERATION REPORT PVD VIII
+                        <td class="title-cell" data-rig-title>
+                            DAILY OPERATION REPORT
                         </td>
 
                         <!-- INFO -->
@@ -59,7 +58,7 @@
 
                                 <tr>
                                     <td>PVD Doc Ref:</td>
-                                    <td>PVDVIII/STC</td>
+                                    <td>PVDI/STC</td>
                                 </tr>
 
                                 <tr>
@@ -101,14 +100,12 @@
                                 <b>Rig Name</b>
                             </td>
 
-                            <td
-                                contenteditable="true"
-                                data-cell="RigName">
-                                PV Drilling - VIII
+                            <td data-cell="RigName" data-rig-name>
+                                PVD
                             </td>
 
                             <td>
-                                <b>Date:</b>
+                                <b>Date</b>
                             </td>
 
                             <td id="date"></td>
@@ -124,7 +121,7 @@
                             <td
                                 contenteditable="true"
                                 data-cell="TotalPOB">
-                                POB =120
+                                120
                             </td>
 
                             <td>
@@ -292,6 +289,15 @@
             <input
                 id="reportFolderInput"
                 placeholder="D:\Reports or \\server\shared\folder"
+            >
+
+            <label class="storage-label">
+                Rig Name
+            </label>
+            
+            <input
+                id="rigNameInput"
+                placeholder="Example: PVD I"
             >
     
             <div class="storage-actions">
