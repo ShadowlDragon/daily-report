@@ -50,10 +50,10 @@ DOR.table = {
                 </tr>
             `;
 
-            const rowCount = Math.max(
-                DOR.config.defaultRowCount,
-                Number(savedRows[name]) || DOR.config.defaultRowCount
-            );
+            const rowCount =
+                savedRows[name] !== undefined
+                    ? Number(savedRows[name])
+                    : DOR.config.defaultRowCount;
 
             for (let i = 1; i <= rowCount; i++) {
                 const row = table.insertRow();
@@ -203,30 +203,23 @@ DOR.table = {
 
     async deleteRow() {
         const table = DOR.state.currentTable;
-
+    
         if (!table) return;
-
+    
+        // table có 1 header row, nên <= 2 nghĩa là còn 1 data row
         if (table.rows.length <= 2) return;
-
+    
         const section = table.dataset.section;
-
-        const deletedRowNumber = table.rows.length - 1;
-        const deletedCellId = `${section}-${deletedRowNumber}`;
-
+    
         table.deleteRow(
             table.rows.length - 1
         );
-
+    
         await DOR.api.saveSectionRows(
             section,
             table.rows.length - 1
         );
-
-        await DOR.api.saveCell(
-            deletedCellId,
-            ""
-        );
-
+    
         DOR.socket.emit("deleteRow", {
             section
         });

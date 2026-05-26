@@ -55,49 +55,47 @@ function getSection(reportData, sectionName) {
 }
 
 function normalizeReportData(date, rawData = {}) {
+
+    // JSON mới
     if (
         rawData &&
         Array.isArray(rawData.sections)
     ) {
+
+        rawData.sections.forEach(section => {
+
+            section.rows =
+                section.rows.map((row, index) => ({
+                    no: index + 1,
+                    value: row.value || ""
+                }));
+        });
+
         return rawData;
     }
 
-    const reportData = createEmptyReport(date);
+    // fallback migrate JSON cũ
+    const reportData =
+        createEmptyReport(date);
 
-    reportData.header = {
-        TotalPOB:
-            rawData.header?.TotalPOB ||
-            rawData.TotalPOB ||
-            "",
-
-        Operator:
-            rawData.header?.Operator ||
-            rawData.Operator ||
-            "",
-
-        CurrentActivities:
-            rawData.header?.CurrentActivities ||
-            rawData.CurrentActivities ||
-            ""
-    };
-
-    const rowCounts = rawData.__rows__ || {};
+    const rowCounts =
+        rawData.__rows__ || {};
 
     DEFAULT_SECTIONS.forEach(sectionName => {
-        const section = getSection(reportData, sectionName);
 
-        const rowCount = Math.max(
-            DEFAULT_ROW_COUNT,
-            Number(rowCounts[sectionName]) || DEFAULT_ROW_COUNT
-        );
+        const section =
+            getSection(reportData, sectionName);
+
+        const rowCount =
+            Number(rowCounts[sectionName]) ||
+            DEFAULT_ROW_COUNT;
 
         section.rows = Array.from(
             { length: rowCount },
             (_, index) => ({
                 no: index + 1,
                 value:
-                    rawData[`${sectionName}-${index + 1}`] ||
-                    ""
+                    rawData[`${sectionName}-${index + 1}`] || ""
             })
         );
     });
