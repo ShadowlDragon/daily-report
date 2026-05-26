@@ -12,6 +12,7 @@ let machineName =
         "machineName"
     );
 
+let isHost = false;
 
 // SETTINGS ELEMENTS
 const settingsModal =
@@ -330,8 +331,16 @@ function init(reportData = {}) {
     const container =
         document.getElementById("report");
 
-    const savedRows =
-        reportData.__rows__ || {};
+        const savedRows = {};
+
+        if (Array.isArray(reportData.sections)) {
+        
+            reportData.sections.forEach(section => {
+        
+                savedRows[section.name] =
+                    section.rows.length;
+            });
+        }
 
     sections.forEach(name => {
 
@@ -428,6 +437,47 @@ async function loadReportData() {
 // =========================
 function applyReportData(data) {
 
+    if (data.header) {
+
+        Object.keys(data.header)
+            .forEach(key => {
+    
+                const cell =
+                    document.querySelector(
+                        `[data-header="${key}"]`
+                    );
+    
+                if (cell) {
+    
+                    cell.innerText =
+                        data.header[key] || "";
+                }
+            });
+    }
+
+    if (Array.isArray(data.sections)) {
+
+        data.sections.forEach(section => {
+
+            section.rows.forEach(row => {
+
+                const cell =
+                    document.querySelector(
+                        `[data-cell="${section.name}-${row.no}"]`
+                    );
+
+                if (!cell) return;
+
+                cell.innerText =
+                    row.value || "";
+            });
+        });
+
+        applyRigName(currentRigName);
+
+        return;
+    }
+
     Object.keys(data)
         .forEach(cellId => {
 
@@ -441,25 +491,11 @@ function applyReportData(data) {
 
             if (!cell) return;
 
-            // RigName is controlled by config
-            if (cellId === "RigName") {
-
-                if (currentRigName) {
-
-                    cell.innerText =
-                        currentRigName;
-                }
-
-                return;
-            }
-
             cell.innerText =
                 data[cellId];
         });
 
-    applyRigName(
-        currentRigName
-    );
+    applyRigName(currentRigName);
 }
 
 
@@ -474,6 +510,56 @@ async function loadReport() {
     applyReportData(
         currentReportData
     );
+}
+
+async function saveHeader(key, value) {
+
+    const date =
+        getToday();
+
+    const res =
+        await fetch("/saveHeader", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type":
+                    "application/json"
+            },
+
+            body: JSON.stringify({
+                date,
+                key,
+                value
+            })
+        });
+
+    if (!res.ok) {
+
+        console.error(
+            "SAVE HEADER FAILED:",
+            key,
+            await res.text()
+        );
+    }
+}
+
+function applyHeaderEditPermission() {
+
+    document
+        .querySelectorAll("[data-header]")
+        .forEach(cell => {
+
+            cell.setAttribute(
+                "contenteditable",
+                isHost ? "true" : "false"
+            );
+
+            cell.classList.toggle(
+                "host-editable",
+                isHost
+            );
+        });
 }
 
 
@@ -768,22 +854,31 @@ async function saveCell(cellId, value) {
     const date =
         getToday();
 
-    await fetch("/saveCell", {
+    const res =
+        await fetch("/saveCell", {
 
-        method: "POST",
+            method: "POST",
 
-        headers: {
-            "Content-Type":
-                "application/json"
-        },
+            headers: {
+                "Content-Type":
+                    "application/json"
+            },
 
-        body: JSON.stringify({
+            body: JSON.stringify({
+                date,
+                cellId,
+                value
+            })
+        });
 
-            date,
+    if (!res.ok) {
+
+        console.error(
+            "SAVE CELL FAILED:",
             cellId,
-            value
-        })
-    });
+            await res.text()
+        );
+    }
 }
 
 
@@ -828,6 +923,22 @@ function bindEditableCells() {
 
                     const cellId =
                         cell.dataset.cell;
+
+                    const headerKey =
+                        cell.dataset.header;
+
+                    if (headerKey) {
+
+                        if (!isHost)
+                            return;
+
+                        await saveHeader(
+                            headerKey,
+                            cell.innerText
+                        );
+
+                        return;
+                    }
 
                     if (!cellId) return;
 
@@ -1062,6 +1173,8 @@ async function initStorageConfig() {
     const config =
         await res.json();
 
+    isHost = !!config.isHost;
+
     const modal =
         document.getElementById("storageModal");
 
@@ -1092,6 +1205,8 @@ async function initStorageConfig() {
     applyRigName(
         currentRigName
     );
+
+    applyHeaderEditPermission();
 
     // chỉ máy host mới thấy nút Storage
     if (config.isHost) {

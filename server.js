@@ -31,6 +31,19 @@ const io = new Server(server, {
     }
 });
 
+const DEFAULT_SECTIONS = [
+    "Safety",
+    "Drilling",
+    "Marine",
+    "Mechanic",
+    "Electrician",
+    "ET",
+    "MC",
+    "Medic"
+];
+
+const DEFAULT_ROW_COUNT = 5;
+
 const PORT = 3000;
 
 const SERVER_VERSION =
@@ -61,11 +74,117 @@ function isLocalRequest(req) {
     );
 }
 
+function createEmptyReport(date) {
+
+    return {
+        date,
+        header: {
+            TotalPOB: "",
+            Operator: "",
+            CurrentActivities: ""
+        },
+        sections: DEFAULT_SECTIONS.map(section => ({
+            name: section,
+            rows: Array.from(
+                { length: DEFAULT_ROW_COUNT },
+                (_, index) => ({
+                    no: index + 1,
+                    value: ""
+                })
+            )
+        }))
+    };
+}
+
+function getSection(reportData, sectionName) {
+
+    let section =
+        reportData.sections.find(item =>
+            item.name === sectionName
+        );
+
+    if (!section) {
+
+        section = {
+            name: sectionName,
+            rows: Array.from(
+                { length: DEFAULT_ROW_COUNT },
+                (_, index) => ({
+                    no: index + 1,
+                    value: ""
+                })
+            )
+        };
+
+        reportData.sections.push(section);
+    }
+
+    return section;
+}
+
+function normalizeReportData(date, rawData = {}) {
+
+    if (
+        rawData &&
+        Array.isArray(rawData.sections)
+    ) {
+        return rawData;
+    }
+
+    const reportData =
+        createEmptyReport(date);
+
+    reportData.header = {
+        TotalPOB:
+            rawData.header?.TotalPOB ||
+            rawData.TotalPOB ||
+            "",
+    
+        Operator:
+            rawData.header?.Operator ||
+            rawData.Operator ||
+            "",
+    
+        CurrentActivities:
+            rawData.header?.CurrentActivities ||
+            rawData.CurrentActivities ||
+            ""
+    };
+
+    const rowCounts =
+        rawData.__rows__ || {};
+
+    DEFAULT_SECTIONS.forEach(sectionName => {
+
+        const section =
+            getSection(reportData, sectionName);
+
+        const rowCount =
+            Math.max(
+                DEFAULT_ROW_COUNT,
+                Number(rowCounts[sectionName]) || DEFAULT_ROW_COUNT
+            );
+
+        section.rows =
+            Array.from(
+                { length: rowCount },
+                (_, index) => ({
+                    no: index + 1,
+                    value:
+                        rawData[`${sectionName}-${index + 1}`] || ""
+                })
+            );
+    });
+
+    return reportData;
+}
+
 function loadConfig() {
 
     if (!fs.existsSync(CONFIG_PATH)) {
 
         REPORT_FOLDER = "";
+        RIG_NAME = "";
         return;
     }
 
@@ -376,12 +495,26 @@ function loadReportFile(date) {
 
     if (fs.existsSync(filePath)) {
 
-        return JSON.parse(
-            fs.readFileSync(
-                filePath,
-                "utf8"
-            )
+        const rawData =
+            JSON.parse(
+                fs.readFileSync(
+                    filePath,
+                    "utf8"
+                )
+            );
+
+        const normalized =
+            normalizeReportData(
+                date,
+                rawData
+            );
+
+        saveReportFile(
+            date,
+            normalized
         );
+
+        return normalized;
     }
 
     const previousDate =
@@ -429,10 +562,29 @@ function loadReportFile(date) {
             )
         );
 
-        return prevData;
+        const normalized =
+            normalizeReportData(
+                date,
+                prevData
+            );
+
+        saveReportFile(
+            date,
+            normalized
+        );
+
+        return normalized;
     }
 
-    return {};
+    const emptyReport =
+        createEmptyReport(date);
+
+    saveReportFile(
+        date,
+        emptyReport
+    );
+
+    return emptyReport;
 }
 
 
@@ -493,6 +645,77 @@ app.get("/load/:date", (req, res) => {
 
 
 // =========================
+// SAVE HEADERS
+// =========================
+
+app.post("/saveHeader", (req, res) => {
+
+    try {
+
+        if (!ensureConfigured(res))
+            return;
+
+        const {
+            date,
+            key,
+            value
+        } = req.body;
+
+        if (!date || !key) {
+
+            return res
+                .status(400)
+                .send("Missing data");
+        }
+
+        const allowedKeys = [
+            "TotalPOB",
+            "Operator",
+            "CurrentActivities"
+        ];
+
+        if (!allowedKeys.includes(key)) {
+
+            return res
+                .status(400)
+                .send("Invalid header key");
+        }
+
+        const reportData =
+            loadReportFile(date);
+
+        if (!reportData.header) {
+
+            reportData.header = {};
+        }
+
+        reportData.header[key] =
+            value;
+
+        saveReportFile(
+            date,
+            reportData
+        );
+
+        io.emit("headerUpdated", {
+            key,
+            value
+        });
+
+        res.send("saved");
+
+    } catch (err) {
+
+        console.error(err);
+
+        res
+            .status(500)
+            .send(err.message);
+    }
+});
+
+
+// =========================
 // SAVE ROWS
 // =========================
 
@@ -509,15 +732,44 @@ app.post("/saveRows", (req, res) => {
             rowCount
         } = req.body;
 
+        if (!date || !section || !rowCount) {
+
+            return res
+                .status(400)
+                .send("Missing data");
+        }
+
         const reportData =
             loadReportFile(date);
 
-        if (!reportData.__rows__) {
-            reportData.__rows__ = {};
+        const sectionData =
+            getSection(
+                reportData,
+                section
+            );
+
+        while (sectionData.rows.length < rowCount) {
+
+            sectionData.rows.push({
+                no: sectionData.rows.length + 1,
+                value: ""
+            });
         }
 
-        reportData.__rows__[section] =
-            rowCount;
+        if (sectionData.rows.length > rowCount) {
+
+            sectionData.rows =
+                sectionData.rows.slice(
+                    0,
+                    rowCount
+                );
+        }
+
+        sectionData.rows =
+            sectionData.rows.map((row, index) => ({
+                no: index + 1,
+                value: row.value || ""
+            }));
 
         saveReportFile(
             date,
@@ -564,7 +816,47 @@ app.post("/saveCell", (req, res) => {
         const reportData =
             loadReportFile(date);
 
-        reportData[cellId] =
+        const parts =
+            cellId.split("-");
+
+        if (parts.length < 2) {
+
+            return res
+                .status(400)
+                .send("Invalid cell id");
+        }
+
+        const rowText =
+            parts.pop();
+
+        const sectionName =
+            parts.join("-");
+
+        const rowNo =
+            Number(rowText);
+
+        if (!sectionName || !Number.isInteger(rowNo) || rowNo < 1) {
+
+            return res
+                .status(400)
+                .send("Invalid row number");
+        }
+
+        const section =
+            getSection(
+                reportData,
+                sectionName
+            );
+
+        while (section.rows.length < rowNo) {
+
+            section.rows.push({
+                no: section.rows.length + 1,
+                value: ""
+            });
+        }
+
+        section.rows[rowNo - 1].value =
             value;
 
         saveReportFile(
