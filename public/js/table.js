@@ -46,7 +46,7 @@ DOR.table = {
             table.innerHTML = `
                 <tr>
                     <th style="width:50px">No.</th>
-                    <th>Activity / Work Done</th>
+                    <th>Current Activity / Work Done</th>
                 </tr>
             `;
 
