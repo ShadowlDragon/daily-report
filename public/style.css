@@ -1019,3 +1019,41 @@ td {
     font-weight: bold;
     color: #111827;
 }
+
+.dor-toast {
+    position: fixed;
+    right: 28px;
+    bottom: 28px;
+    padding: 10px 16px;
+    border-radius: 999px;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    opacity: 0;
+    transform: translateY(10px);
+    transition: 0.2s ease;
+
+    z-index: 1000001;
+
+    pointer-events: none;
+    filter: none !important;
+    backdrop-filter: none !important;
+}
+
+.dor-toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.dor-toast.success {
+    background: #111827;
+}
+
+.dor-toast.error {
+    background: #dc2626;
+}
+
+.dor-toast.warning {
+    background: #f59e0b;
+}
