@@ -185,6 +185,26 @@ DOR.table = {
                             }
                         };
                     });
+
+                document.addEventListener("click", (e) => {
+
+                    const insideTable =
+                        e.target.closest(
+                            "table[data-section]"
+                        );
+                
+                    const insideControls =
+                        e.target.closest(
+                            ".controls"
+                        );
+                
+                    if (
+                        !insideTable &&
+                        !insideControls
+                    ) {
+                        DOR.table.clearSelectedRow();
+                    }
+                });
             });
     },
 
@@ -265,30 +285,52 @@ DOR.table = {
     },
 
     async addRow() {
-        const table = DOR.state.currentTable;
-
-        if (!table) return;
-
+        let table = DOR.state.currentTable;
+    
+        if (!table) {
+            DOR.toast.show(
+                "Select a section first",
+                "warning"
+            );
+            return;
+        }
+    
         const section = table.dataset.section;
-        const rowNumber = table.rows.length;
-
-        const row = table.insertRow();
-
+    
+        let insertIndex;
+    
+        if (DOR.state.selectedRow) {
+            insertIndex =
+                DOR.state.selectedRow.rowIndex + 1;
+        } else {
+            // nếu chưa chọn row thì add cuối bảng như cũ
+            insertIndex = table.rows.length;
+        }
+    
+        const row = table.insertRow(insertIndex);
+    
         row.innerHTML = DOR.table.createRowHTML(
             section,
-            rowNumber
+            insertIndex
         );
-
+    
+        DOR.table.renumberTable(table);
+    
         DOR.editable.bindEditableCells();
-
-        await DOR.api.saveSectionRows(
-            section,
-            table.rows.length - 1
-        );
-
-        DOR.socket.emit("addRow", {
+        DOR.table.bindTables();
+    
+        await DOR.table.saveWholeSection(table);
+    
+        DOR.table.selectRow(row);
+    
+        DOR.socket.emit("sectionReload", {
             section
         });
+    
+        DOR.toast.show(
+            "Row added",
+            "success"
+        );
     },
 
     async deleteRow() {
@@ -318,6 +360,8 @@ DOR.table = {
         const section = table.dataset.section;
     
         selectedRow.remove();
+
+        DOR.table.clearSelectedRow();
     
         DOR.state.selectedRow = null;
     
@@ -389,6 +433,30 @@ DOR.table = {
         );
     
         DOR.toast.show("Copied", "success");
+    },
+
+    clearSelectedRow() {
+
+        document
+            .querySelectorAll("tr.selected-row")
+            .forEach(row => {
+                row.classList.remove(
+                    "selected-row"
+                );
+            });
+    
+        const controls =
+            document.querySelector(
+                ".controls"
+            );
+    
+        if (controls) {
+            controls.classList.remove(
+                "active"
+            );
+        }
+    
+        DOR.state.selectedRow = null;
     },
 };
 

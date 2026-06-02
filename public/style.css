@@ -1090,11 +1090,13 @@ td {
     background: rgba(245, 158, 11, 0.95);
 }
 
-tr.selected-row td {
-    background: rgba(74, 108, 247, 0.14) !important;
-}
+/* tr.selected-row td:not(.no) {
+    background:
+        rgba(74, 108, 247, 0.14)
+        !important;
+} */
 
-tr.selected-row {
+tr.selected-row td:not(.no) {
     outline: 2px solid #4a6cf7;
     outline-offset: -2px;
 }
