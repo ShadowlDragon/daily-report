@@ -138,6 +138,12 @@ DOR.table = {
                 table.onclick = (e) => {
                     e.stopPropagation();
 
+                    const floatingTools = document.getElementById("floatingTools");
+
+                    if (floatingTools) {
+                        floatingTools.classList.add("collapsed");
+                    }
+
                     DOR.state.currentTable = table;
 
                     const controls = document.querySelector(".controls");
@@ -255,7 +261,10 @@ DOR.table = {
         const table = DOR.state.currentTable;
     
         if (!table) {
-            DOR.table.showCopyToast("Select a section first");
+            DOR.toast.show(
+                "Select a section first",
+                "warning"
+            );
             return;
         }
     
@@ -273,35 +282,8 @@ DOR.table = {
             lines.join("\n")
         );
     
-        DOR.table.showCopyToast("Copied");
+        DOR.toast.show("Copied", "success");
     },
-    
-    showCopyToast(message) {
-        const oldToast = document.querySelector(".copy-toast");
-    
-        if (oldToast) {
-            oldToast.remove();
-        }
-    
-        const toast = document.createElement("div");
-    
-        toast.className = "copy-toast";
-        toast.innerText = message;
-    
-        document.body.appendChild(toast);
-    
-        setTimeout(() => {
-            toast.classList.add("show");
-        }, 10);
-    
-        setTimeout(() => {
-            toast.classList.remove("show");
-    
-            setTimeout(() => {
-                toast.remove();
-            }, 200);
-        }, 1200);
-    }
 };
 
 window.addRow = DOR.table.addRow;

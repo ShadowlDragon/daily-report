@@ -7,6 +7,15 @@ DOR.floatingTools = {
 
         toolToggleBtn.onclick = (e) => {
             e.stopPropagation();
+        
+            const controls = document.querySelector(".controls");
+        
+            if (controls) {
+                controls.classList.remove("active");
+            }
+        
+            DOR.state.currentTable = null;
+        
             floatingTools.classList.toggle("collapsed");
         };
 

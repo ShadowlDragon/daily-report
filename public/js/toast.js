@@ -3,7 +3,12 @@ DOR.toast = {
         const oldToast = document.querySelector(".dor-toast");
 
         if (oldToast) {
-            oldToast.remove();
+            oldToast.classList.remove("show");
+            oldToast.classList.add("hide");
+
+            setTimeout(() => {
+                oldToast.remove();
+            }, 320);
         }
 
         const toast = document.createElement("div");
@@ -13,16 +18,19 @@ DOR.toast = {
 
         document.body.appendChild(toast);
 
-        setTimeout(() => {
-            toast.classList.add("show");
-        }, 10);
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                toast.classList.add("show");
+            });
+        });
 
         setTimeout(() => {
             toast.classList.remove("show");
+            toast.classList.add("hide");
 
             setTimeout(() => {
                 toast.remove();
-            }, 200);
+            }, 320);
         }, 1800);
     }
 };
