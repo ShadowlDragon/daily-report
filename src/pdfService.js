@@ -1,5 +1,13 @@
 const fs = require("fs");
 const path = require("path");
+
+process.env.PUPPETEER_CACHE_DIR = path.join(
+    __dirname,
+    "..",
+    ".cache",
+    "puppeteer"
+);
+
 const puppeteer = require("puppeteer");
 
 const {
@@ -18,13 +26,6 @@ const {
     getToday,
     getTimeStamp
 } = require("./utils/date");
-
-process.env.PUPPETEER_CACHE_DIR = path.join(
-    __dirname,
-    "..",
-    ".cache",
-    "puppeteer"
-);
 
 async function generatePDFBuffer(sourceName = "Unknown-PC") {
     let browser;
