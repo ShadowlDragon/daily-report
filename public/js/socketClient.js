@@ -174,5 +174,20 @@ DOR.socketClient = {
                 rows[i].cells[1].innerText = "";
             }
         });
+
+        DOR.socket.on("sectionReloaded", async () => {
+            DOR.state.currentReportData =
+                await DOR.api.loadReportData();
+        
+            DOR.table.init(
+                DOR.state.currentReportData
+            );
+        
+            DOR.table.applyReportData(
+                DOR.state.currentReportData
+            );
+        
+            DOR.rig.applyHeaderEditPermission();
+        });
     }
 };

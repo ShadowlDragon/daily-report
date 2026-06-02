@@ -135,23 +135,56 @@ DOR.table = {
         document
             .querySelectorAll("table[data-section]")
             .forEach(table => {
+    
                 table.onclick = (e) => {
                     e.stopPropagation();
-
-                    const floatingTools = document.getElementById("floatingTools");
-
+    
+                    const floatingTools =
+                        document.getElementById("floatingTools");
+    
                     if (floatingTools) {
                         floatingTools.classList.add("collapsed");
                     }
-
+    
                     DOR.state.currentTable = table;
-
-                    const controls = document.querySelector(".controls");
-
+    
+                    const controls =
+                        document.querySelector(".controls");
+    
                     if (controls) {
                         controls.classList.add("active");
                     }
                 };
+    
+                table
+                    .querySelectorAll("tr")
+                    .forEach((row, index) => {
+    
+                        // bỏ qua header row
+                        if (index === 0) return;
+    
+                        row.onclick = (e) => {
+                            e.stopPropagation();
+    
+                            DOR.state.currentTable = table;
+    
+                            DOR.table.selectRow(row);
+    
+                            const controls =
+                                document.querySelector(".controls");
+    
+                            if (controls) {
+                                controls.classList.add("active");
+                            }
+    
+                            const floatingTools =
+                                document.getElementById("floatingTools");
+    
+                            if (floatingTools) {
+                                floatingTools.classList.add("collapsed");
+                            }
+                        };
+                    });
             });
     },
 
@@ -177,6 +210,57 @@ DOR.table = {
             controls.addEventListener("click", (e) => {
                 e.stopPropagation();
             });
+        }
+    },
+
+    selectRow(row) {
+        document
+            .querySelectorAll("tr.selected-row")
+            .forEach(item => {
+                item.classList.remove("selected-row");
+            });
+    
+        row.classList.add("selected-row");
+    
+        DOR.state.selectedRow = row;
+    },
+    
+    renumberTable(table) {
+        const section = table.dataset.section;
+        const rows = table.querySelectorAll("tr");
+    
+        let no = 1;
+    
+        rows.forEach((row, index) => {
+            if (index === 0) return;
+    
+            row.cells[0].innerText = no;
+    
+            const cell = row.cells[1];
+    
+            cell.dataset.cell = `${section}-${no}`;
+    
+            no++;
+        });
+    },
+    
+    async saveWholeSection(table) {
+        const section = table.dataset.section;
+        const rows = table.querySelectorAll("tr");
+    
+        await DOR.api.saveSectionRows(
+            section,
+            rows.length - 1
+        );
+    
+        for (let i = 1; i < rows.length; i++) {
+            const value =
+                rows[i].cells[1].innerText.trim();
+    
+            await DOR.api.saveCell(
+                `${section}-${i}`,
+                value
+            );
         }
     },
 
@@ -208,27 +292,49 @@ DOR.table = {
     },
 
     async deleteRow() {
-        const table = DOR.state.currentTable;
+        const selectedRow = DOR.state.selectedRow;
+    
+        if (!selectedRow) {
+            DOR.toast.show(
+                "Select a row first",
+                "warning"
+            );
+            return;
+        }
+    
+        const table = selectedRow.closest("table");
     
         if (!table) return;
     
         // table có 1 header row, nên <= 2 nghĩa là còn 1 data row
-        if (table.rows.length <= 2) return;
+        if (table.rows.length <= 2) {
+            DOR.toast.show(
+                "Cannot delete the last row",
+                "warning"
+            );
+            return;
+        }
     
         const section = table.dataset.section;
     
-        table.deleteRow(
-            table.rows.length - 1
-        );
+        selectedRow.remove();
     
-        await DOR.api.saveSectionRows(
-            section,
-            table.rows.length - 1
-        );
+        DOR.state.selectedRow = null;
     
-        DOR.socket.emit("deleteRow", {
+        DOR.table.renumberTable(table);
+    
+        await DOR.table.saveWholeSection(table);
+    
+        DOR.editable.bindEditableCells();
+    
+        DOR.socket.emit("sectionReload", {
             section
         });
+    
+        DOR.toast.show(
+            "Row deleted",
+            "success"
+        );
     },
 
     async clearTable() {

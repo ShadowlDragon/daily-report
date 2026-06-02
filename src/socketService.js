@@ -99,6 +99,13 @@ function setupSocket(io) {
                 }
             }
         });
+
+        socket.on("sectionReload", (data) => {
+            socket.broadcast.emit(
+                "sectionReloaded",
+                data
+            );
+        });
     });
 }
 
