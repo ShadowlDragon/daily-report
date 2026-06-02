@@ -405,6 +405,11 @@ DOR.table = {
         DOR.socket.emit("clearTable", {
             section
         });
+
+        DOR.toast.show(
+            "Table cleared",
+            "success"
+        );
     },
 
     async copyCurrentSection() {

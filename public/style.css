@@ -1079,7 +1079,7 @@ td {
 /* TYPES */
 
 .dor-toast.success {
-    background: rgba(17, 24, 39, 0.92);
+    background: rgba(3, 204, 10, 0.92);
 }
 
 .dor-toast.error {
@@ -1089,12 +1089,6 @@ td {
 .dor-toast.warning {
     background: rgba(245, 158, 11, 0.95);
 }
-
-/* tr.selected-row td:not(.no) {
-    background:
-        rgba(74, 108, 247, 0.14)
-        !important;
-} */
 
 tr.selected-row td:not(.no) {
     outline: 2px solid #4a6cf7;
