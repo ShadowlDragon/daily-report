@@ -4,3 +4,4 @@ portable-git/
 node.exe
 config.json
 reports/
+.DS_Store
