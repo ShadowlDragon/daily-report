@@ -1,6 +1,10 @@
 const express = require("express");
 
 const {
+    writeErrorLog
+} = require("../loggerService");
+
+const {
     ensureConfigured
 } = require("../configService");
 
@@ -46,7 +50,17 @@ router.get("/exportPDF", async (req, res) => {
         console.error("PDF ERROR");
         console.error(err);
         console.error("");
-
+    
+        writeErrorLog(
+            "PDF EXPORT ERROR",
+            err,
+            {
+                machineName,
+                ip,
+                route: "/exportPDF"
+            }
+        );
+    
         res
             .status(500)
             .send("PDF Export Failed");

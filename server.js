@@ -89,6 +89,34 @@ setupSocket(io);
 
 startScheduler();
 
+// =========================
+// ERROR LOG
+// =========================
+
+const {
+    writeErrorLog
+} = require("./src/loggerService");
+
+process.on("uncaughtException", (err) => {
+    console.error("UNCAUGHT EXCEPTION");
+    console.error(err);
+
+    writeErrorLog(
+        "UNCAUGHT EXCEPTION",
+        err
+    );
+});
+
+process.on("unhandledRejection", (reason) => {
+    console.error("UNHANDLED REJECTION");
+    console.error(reason);
+
+    writeErrorLog(
+        "UNHANDLED REJECTION",
+        reason
+    );
+});
+
 
 // =========================
 // START SERVER

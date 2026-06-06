@@ -16,6 +16,10 @@ if not exist "%GIT%" (
     exit /b 1
 )
 
+echo Closing running server...
+taskkill /F /IM node.exe >nul 2>&1
+timeout /t 2 >nul
+
 echo Backing up runtime files...
 
 if exist "%BACKUP%" rmdir /s /q "%BACKUP%"
@@ -27,6 +31,9 @@ if exist ".cache" robocopy ".cache" "%BACKUP%\.cache" /E >nul
 if exist "portable-git" robocopy "portable-git" "%BACKUP%\portable-git" /E >nul
 if exist "config.json" copy "config.json" "%BACKUP%\config.json" >nul
 if exist "reports" robocopy "reports" "%BACKUP%\reports" /E >nul
+
+echo Trusting repository...
+"%GIT%" config --global --add safe.directory "%CD%"
 
 echo Fetching latest update...
 "%GIT%" fetch origin
@@ -59,6 +66,15 @@ rmdir /s /q "%BACKUP%"
 
 echo.
 echo Update complete.
+echo Starting DOR server...
 echo.
 
-pause
+if exist "start.bat" (
+    start "DOR Server" "%~dp0start.bat"
+) else (
+    echo start.bat not found.
+    pause
+    exit /b 1
+)
+
+exit /b 0

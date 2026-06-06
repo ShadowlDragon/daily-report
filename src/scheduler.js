@@ -4,6 +4,10 @@ const {
     saveAutoPDF
 } = require("./pdfService");
 
+const {
+    writeErrorLog
+} = require("./loggerService");
+
 function startScheduler() {
     schedule.scheduleJob(
         "0 15 * * *",
@@ -22,6 +26,14 @@ function startScheduler() {
                 console.error("AUTO PDF ERROR");
                 console.error(err);
                 console.error("");
+            
+                writeErrorLog(
+                    "AUTO PDF ERROR",
+                    err,
+                    {
+                        job: "3PM AUTO PDF EXPORT"
+                    }
+                );
             }
         }
     );

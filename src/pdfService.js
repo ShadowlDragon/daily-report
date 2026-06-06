@@ -27,6 +27,10 @@ const {
     getTimeStamp
 } = require("./utils/date");
 
+const {
+    writeErrorLog
+} = require("./loggerService");
+
 async function generatePDFBuffer(sourceName = "Unknown-PC") {
     let browser;
 
@@ -123,6 +127,17 @@ async function generatePDFBuffer(sourceName = "Unknown-PC") {
 
         return pdfBuffer;
 
+    } catch (err) {
+        writeErrorLog(
+            "PDF GENERATION ERROR",
+            err,
+            {
+                sourceName
+            }
+        );
+
+        throw err;
+
     } finally {
         if (browser) {
             await browser.close();
@@ -131,44 +146,54 @@ async function generatePDFBuffer(sourceName = "Unknown-PC") {
 }
 
 async function saveAutoPDF() {
-    const config = getConfig();
+    try {
+        const config = getConfig();
 
-    if (!config.reportFolder) {
-        console.log(
-            "AUTO PDF SKIPPED: REPORT_FOLDER is not configured"
+        if (!config.reportFolder) {
+            console.log(
+                "AUTO PDF SKIPPED: REPORT_FOLDER is not configured"
+            );
+
+            return null;
+        }
+
+        const date = getToday();
+
+        const dailyFolder = ensureDailyFolder(date);
+
+        const pdfBuffer = await generatePDFBuffer(
+            "AUTO-3PM"
         );
 
-        return null;
+        const fileName = `DOR-${date}-${getTimeStamp()}.pdf`;
+
+        const pdfPath = path.join(
+            dailyFolder,
+            fileName
+        );
+
+        fs.writeFileSync(
+            pdfPath,
+            pdfBuffer
+        );
+
+        console.log("");
+        console.log("================================");
+        console.log("AUTO PDF SAVED");
+        console.log("================================");
+        console.log(pdfPath);
+        console.log("");
+
+        return pdfPath;
+
+    } catch (err) {
+        writeErrorLog(
+            "AUTO PDF SAVE ERROR",
+            err
+        );
+
+        throw err;
     }
-
-    const date = getToday();
-
-    const dailyFolder = ensureDailyFolder(date);
-
-    const pdfBuffer = await generatePDFBuffer(
-        "AUTO-3PM"
-    );
-
-    const fileName = `DOR-${date}-${getTimeStamp()}.pdf`;
-
-    const pdfPath = path.join(
-        dailyFolder,
-        fileName
-    );
-
-    fs.writeFileSync(
-        pdfPath,
-        pdfBuffer
-    );
-
-    console.log("");
-    console.log("================================");
-    console.log("AUTO PDF SAVED");
-    console.log("================================");
-    console.log(pdfPath);
-    console.log("");
-
-    return pdfPath;
 }
 
 module.exports = {
