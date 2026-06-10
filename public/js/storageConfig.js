@@ -10,10 +10,15 @@ DOR.storageConfig = {
         const saveBtn = document.getElementById("saveFolderBtn");
         const cancelBtn = document.getElementById("cancelFolderBtn");
         const settingBtn = document.getElementById("folderSettingBtn");
+        const autoPdfInput = document.getElementById("autoPdfExportInput");
 
-        if (!modal || !input || !rigInput || !saveBtn || !settingBtn) {
+        if (!modal || !input || !rigInput || !saveBtn || !settingBtn || !autoPdfInput) {
             console.error("Storage config elements missing");
             return;
+        }
+
+        function toBoolean(value) {
+            return value === true || value === "true";
         }
 
         DOR.state.currentRigName = config.rigName || "";
@@ -22,25 +27,36 @@ DOR.storageConfig = {
             DOR.state.currentRigName
         );
 
+        autoPdfInput.checked =
+            toBoolean(config.autoPdfExport);
+
         DOR.rig.applyHeaderEditPermission();
 
         settingBtn.style.display =
             config.isHost ? "flex" : "none";
 
-        if (!config.hasConfig && config.isHost) {
+        if (
+            config.isHost &&
+            !String(config.reportFolder || "").trim()
+        ) {
             modal.classList.add("active");
         }
 
         input.value = config.reportFolder || "";
         rigInput.value = config.rigName || "";
 
-        settingBtn.onclick = () => {
-            input.value = config.reportFolder || "";
+        settingBtn.onclick = async () => {
+            const latestConfig =
+                await DOR.api.getConfig();
+
+            input.value =
+                latestConfig.reportFolder || "";
 
             rigInput.value =
-                DOR.state.currentRigName ||
-                config.rigName ||
-                "";
+                latestConfig.rigName || "";
+
+            autoPdfInput.checked =
+                toBoolean(latestConfig.autoPdfExport);
 
             modal.classList.add("active");
 
@@ -75,7 +91,8 @@ DOR.storageConfig = {
 
             const saveRes = await DOR.api.saveConfig(
                 folder,
-                rigName
+                rigName,
+                autoPdfInput.checked
             );
 
             if (!saveRes.ok) {
@@ -100,13 +117,19 @@ DOR.storageConfig = {
             );
 
             setTimeout(() => {
-                location.reload();
-            }, 700);
+                modal.classList.remove("active");
+            }, 300);
         };
 
         if (cancelBtn) {
             cancelBtn.onclick = () => {
-                if (!config.hasConfig) return;
+                const hasConfig =
+                    !!(
+                        input.value.trim() ||
+                        config.reportFolder
+                    );
+
+                if (!hasConfig) return;
 
                 modal.classList.remove("active");
             };

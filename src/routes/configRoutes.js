@@ -31,7 +31,8 @@ router.post("/", (req, res) => {
 
     const {
         reportFolder,
-        rigName
+        rigName,
+        autoPdfExport
     } = req.body;
 
     if (!reportFolder) {
@@ -47,7 +48,12 @@ router.post("/", (req, res) => {
     }
 
     try {
-        saveConfig(reportFolder, rigName);
+        saveConfig(
+            reportFolder,
+            rigName,
+            autoPdfExport === true ||
+            autoPdfExport === "true"
+        );
 
         res.send("saved");
 

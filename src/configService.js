@@ -5,6 +5,7 @@ const CONFIG_PATH = path.join(__dirname, "..", "config.json");
 
 let REPORT_FOLDER = "";
 let RIG_NAME = "";
+let AUTO_PDF_EXPORT = true;
 
 function loadConfig() {
     if (!fs.existsSync(CONFIG_PATH)) {
@@ -21,6 +22,9 @@ function loadConfig() {
         REPORT_FOLDER = config.reportFolder || "";
         RIG_NAME = config.rigName || "";
 
+        AUTO_PDF_EXPORT =
+            config.autoPdfExport !== false;
+
     } catch (err) {
         console.error("CONFIG LOAD ERROR:");
         console.error(err);
@@ -30,9 +34,10 @@ function loadConfig() {
     }
 }
 
-function saveConfig(folder, rigName) {
+function saveConfig(folder, rigName, autoPdfExport = true) {
     REPORT_FOLDER = folder;
     RIG_NAME = rigName;
+    AUTO_PDF_EXPORT = autoPdfExport;
 
     if (!fs.existsSync(REPORT_FOLDER)) {
         fs.mkdirSync(REPORT_FOLDER, {
@@ -45,7 +50,8 @@ function saveConfig(folder, rigName) {
         JSON.stringify(
             {
                 reportFolder: REPORT_FOLDER,
-                rigName: RIG_NAME
+                rigName: RIG_NAME,
+                autoPdfExport: AUTO_PDF_EXPORT
             },
             null,
             2
@@ -57,7 +63,7 @@ function getConfig() {
     return {
         reportFolder: REPORT_FOLDER,
         rigName: RIG_NAME,
-        hasConfig: !!REPORT_FOLDER && !!RIG_NAME
+        autoPdfExport: AUTO_PDF_EXPORT
     };
 }
 

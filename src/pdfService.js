@@ -61,9 +61,17 @@ async function generatePDFBuffer(sourceName = "Unknown-PC") {
         await page.goto(
             `http://127.0.0.1:${PORT}`,
             {
-                waitUntil: "networkidle0",
+                waitUntil: "domcontentloaded",
                 timeout: 60000
             }
+        );
+
+        await page.waitForSelector("#report", {
+            timeout: 30000
+        });
+
+        await new Promise(resolve =>
+            setTimeout(resolve, 2000)
         );
 
         await new Promise(resolve =>

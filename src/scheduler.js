@@ -5,6 +5,10 @@ const {
 } = require("./pdfService");
 
 const {
+    getConfig
+} = require("./configService");
+
+const {
     writeErrorLog
 } = require("./loggerService");
 
@@ -12,6 +16,13 @@ function startScheduler() {
     schedule.scheduleJob(
         "0 15 * * *",
         async () => {
+            const config = getConfig();
+
+            if (config.autoPdfExport === false) {
+                console.log("AUTO PDF SKIPPED: Disabled in config");
+                return;
+            }
+            
             console.log("");
             console.log("================================");
             console.log("3PM AUTO PDF EXPORT");

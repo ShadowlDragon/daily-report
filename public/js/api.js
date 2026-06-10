@@ -90,7 +90,7 @@ DOR.api = {
         return await res.json();
     },
 
-    async saveConfig(reportFolder, rigName) {
+    async saveConfig(reportFolder, rigName, autoPdfExport) {
         return await fetch("/config", {
             method: "POST",
             headers: {
@@ -98,7 +98,8 @@ DOR.api = {
             },
             body: JSON.stringify({
                 reportFolder,
-                rigName
+                rigName,
+                autoPdfExport
             })
         });
     }

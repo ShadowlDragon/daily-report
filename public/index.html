@@ -279,8 +279,8 @@
         </button>
     
         <button id="folderSettingBtn" class="tool-btn host-only">
-            <i class="fa-solid fa-folder-open"></i>
-            <span class="tooltip">Storage</span>
+            <i class="fa-solid fa-screwdriver-wrench"></i>
+            <span class="tooltip">Setting</span>
         </button>
     
         <button id="settingsBtn" class="tool-btn">
@@ -293,7 +293,11 @@
     <div id="storageModal">
         <div class="storage-box">
             <h2>Report Storage Folder</h2>
-    
+            
+            <label class="label">
+                Storage
+            </label>
+
             <p>
                 Enter the folder path where reports will be saved.
             </p>
@@ -303,7 +307,7 @@
                 placeholder="D:\Reports or \\server\shared\folder"
             >
 
-            <label class="storage-label">
+            <label class="label">
                 Rig Name
             </label>
             
@@ -311,6 +315,14 @@
                 id="rigNameInput"
                 placeholder="Example: PVD I"
             >
+
+            <label class="label-check">
+                <input
+                    type="checkbox"
+                    id="autoPdfExportInput"
+                >
+                <span>Enable auto PDF export at 15:00</span>
+            </label>
     
             <div class="storage-actions">
                 <button id="saveFolderBtn">
