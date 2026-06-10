@@ -18,6 +18,7 @@ router.get("/", (req, res) => {
         hasConfig: config.hasConfig,
         reportFolder: config.reportFolder,
         rigName: config.rigName,
+        autoPdfExport: config.autoPdfExport !== false,
         isHost: isLocalRequest(req)
     });
 });
