@@ -19,8 +19,11 @@ DOR.pdf = {
                 DOR.state.machineName ||
                 "Unknown-PC";
 
+            const isHost =
+                DOR.state.isHost === true;
+
             const res = await fetch(
-                `/exportPDF?machineName=${encodeURIComponent(machineName)}`
+                `/exportPDF?machineName=${encodeURIComponent(machineName)}&isHost=${isHost}`
             );
 
             if (!res.ok) {
@@ -72,37 +75,50 @@ DOR.pdf = {
                 return;
             }
 
-            const url =
-                window.URL.createObjectURL(
-                    blob
+            if (!isHost) {
+
+                const url =
+                    window.URL.createObjectURL(
+                        blob
+                    );
+
+                const a =
+                    document.createElement(
+                        "a"
+                    );
+
+                a.href = url;
+
+                a.download =
+                    res.headers.get(
+                        "X-PDF-File-Name"
+                    ) ||
+                    `DOR-${Date.now()}.pdf`;
+
+                document.body.appendChild(a);
+
+                a.click();
+
+                a.remove();
+
+                setTimeout(() => {
+
+                    window.URL.revokeObjectURL(
+                        url
+                    );
+
+                }, 1000);
+
+                DOR.toast.show(
+                    "PDF downloaded",
+                    "success"
                 );
 
-            const a =
-                document.createElement(
-                    "a"
-                );
-
-            a.href = url;
-
-            a.download =
-                `DOR-${Date.now()}.pdf`;
-
-            document.body.appendChild(a);
-
-            a.click();
-
-            a.remove();
-
-            setTimeout(() => {
-
-                window.URL.revokeObjectURL(
-                    url
-                );
-
-            }, 1000);
+                return;
+            }
 
             DOR.toast.show(
-                "PDF downloaded",
+                "PDF saved",
                 "success"
             );
 

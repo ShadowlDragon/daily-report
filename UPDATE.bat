@@ -17,6 +17,7 @@ if not exist "%GIT%" (
 )
 
 echo Closing running server...
+taskkill /F /FI "WINDOWTITLE eq DOR Server*" >nul 2>&1
 taskkill /F /IM node.exe >nul 2>&1
 timeout /t 2 >nul
 

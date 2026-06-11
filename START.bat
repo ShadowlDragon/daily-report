@@ -1,3 +1,8 @@
 @echo off
-cd /d %~dp0
+title DOR Server
+
+cd /d "%~dp0"
+
 node.exe server.js
+
+exit

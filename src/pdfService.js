@@ -23,8 +23,7 @@ const {
 } = require("./reportService");
 
 const {
-    getToday,
-    getTimeStamp
+    getToday
 } = require("./utils/date");
 
 const {
@@ -62,17 +61,13 @@ async function generatePDFBuffer(sourceName = "Unknown-PC") {
             `http://127.0.0.1:${PORT}`,
             {
                 waitUntil: "domcontentloaded",
-                timeout: 60000
+                timeout: 0
             }
         );
 
         await page.waitForSelector("#report", {
-            timeout: 30000
+            timeout: 0
         });
-
-        await new Promise(resolve =>
-            setTimeout(resolve, 2000)
-        );
 
         await new Promise(resolve =>
             setTimeout(resolve, 2000)
@@ -173,7 +168,7 @@ async function saveAutoPDF() {
             "AUTO-3PM"
         );
 
-        const fileName = `DOR-${date}-${getTimeStamp()}.pdf`;
+        const fileName = `DOR-${date}.pdf`;
 
         const pdfPath = path.join(
             dailyFolder,
