@@ -109,6 +109,7 @@ DOR.editable = {
                     }
                 
                     DOR.editable.bindEditableCells();
+                    DOR.table.bindTables();
                 
                     // fill data
                     for (let i = 0; i < lines.length; i++) {

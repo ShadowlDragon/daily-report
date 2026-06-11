@@ -296,7 +296,7 @@ td[contenteditable] {
     font-size: 20px;
 }
 
-.controls .label {
+.controls .control-label {
 
     opacity: 0;
 
@@ -311,7 +311,7 @@ td[contenteditable] {
     font-weight: bold;
 }
 
-.controls button:hover .label {
+.controls button:hover .control-label {
 
     opacity: 1;
 }
@@ -964,7 +964,7 @@ td {
     box-shadow: 0 0 0 3px rgba(74,108,247,0.15);
 }
 
-.storage-actions {
+.config-actions {
     display: flex;
     justify-content: flex-end;
     gap: 10px;
@@ -972,7 +972,7 @@ td {
     margin-top: 20px;
 }
 
-.storage-actions button {
+.config-actions button {
     height: 46px;
 
     padding: 0 22px;
@@ -990,7 +990,7 @@ td {
         transform 0.15s ease;
 }
 
-.storage-actions button:hover {
+.config-actions button:hover {
     transform: translateY(-1px);
 }
 

@@ -162,6 +162,10 @@ DOR.table = {
     
                         // bỏ qua header row
                         if (index === 0) return;
+
+                        if (row.dataset.rowBound) return;
+
+                        row.dataset.rowBound = "1";
     
                         row.onclick = (e) => {
                             e.stopPropagation();
@@ -335,7 +339,7 @@ DOR.table = {
 
     async deleteRow() {
         const selectedRow = DOR.state.selectedRow;
-    
+
         if (!selectedRow) {
             DOR.toast.show(
                 "Select a row first",
@@ -343,12 +347,11 @@ DOR.table = {
             );
             return;
         }
-    
+
         const table = selectedRow.closest("table");
-    
+
         if (!table) return;
-    
-        // table có 1 header row, nên <= 2 nghĩa là còn 1 data row
+
         if (table.rows.length <= 2) {
             DOR.toast.show(
                 "Cannot delete the last row",
@@ -356,25 +359,35 @@ DOR.table = {
             );
             return;
         }
-    
+
         const section = table.dataset.section;
-    
+
+        const deletedRowIndex = selectedRow.rowIndex;
+
         selectedRow.remove();
 
-        DOR.table.clearSelectedRow();
-    
-        DOR.state.selectedRow = null;
-    
         DOR.table.renumberTable(table);
-    
+
         await DOR.table.saveWholeSection(table);
-    
+
         DOR.editable.bindEditableCells();
-    
+        DOR.table.bindTables();
+
+        let nextRow =
+            table.rows[deletedRowIndex] ||
+            table.rows[deletedRowIndex - 1];
+
+        if (nextRow && nextRow.rowIndex !== 0) {
+            DOR.table.selectRow(nextRow);
+            DOR.state.currentTable = table;
+        } else {
+            DOR.state.selectedRow = null;
+        }
+
         DOR.socket.emit("sectionReload", {
             section
         });
-    
+
         DOR.toast.show(
             "Row deleted",
             "success"
