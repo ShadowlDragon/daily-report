@@ -446,11 +446,56 @@ DOR.table = {
             }
         }
     
-        await navigator.clipboard.writeText(
-            lines.join("\n")
-        );
+        try {
+            await DOR.table.copyTextToClipboard(
+                lines.join("\n")
+            );
+
+            DOR.toast.show("Copied", "success");
+
+        } catch (err) {
+            console.error(err);
+
+            DOR.toast.show(
+                "Copy failed",
+                "error"
+            );
+        }
     
         DOR.toast.show("Copied", "success");
+    },
+
+    async copyTextToClipboard(text) {
+        if (
+            navigator.clipboard &&
+            window.isSecureContext
+        ) {
+            await navigator.clipboard.writeText(text);
+            return;
+        }
+
+        const textarea =
+            document.createElement("textarea");
+
+        textarea.value = text;
+
+        textarea.style.position = "fixed";
+        textarea.style.left = "-9999px";
+        textarea.style.top = "-9999px";
+
+        document.body.appendChild(textarea);
+
+        textarea.focus();
+        textarea.select();
+
+        const success =
+            document.execCommand("copy");
+
+        textarea.remove();
+
+        if (!success) {
+            throw new Error("Copy failed");
+        }
     },
 
     clearSelectedRow() {
