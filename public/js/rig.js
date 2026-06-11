@@ -18,6 +18,15 @@ DOR.rig = {
                 el.innerText = `DAILY OPERATION REPORT ${rigName}`;
             });
 
+        const docRefCell =
+                document.getElementById(
+                    "docRefCell"
+                );
+
+        if (docRefCell) {
+            docRefCell.innerText = rigName;
+        }
+
         const titleCell = document.querySelector(".title-cell");
 
         if (titleCell) {
