@@ -34,6 +34,8 @@ function setupUpdateScheduler(io) {
                     }
                 );
 
+                console.log("Socket event sent.");
+
             } catch (err) {
                 console.error("UPDATE CHECK ERROR");
                 console.error(err);
