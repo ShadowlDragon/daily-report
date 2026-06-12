@@ -219,5 +219,21 @@ DOR.socketClient = {
                 "warning"
             );
         });
+
+        DOR.socket.on(
+            "updateAvailable",
+            data => {
+
+                console.log(
+                    "UPDATE AVAILABLE",
+                    data
+                );
+
+                DOR.toast.show(
+                    "New update available",
+                    "warning"
+                );
+            }
+        );
     }
 };

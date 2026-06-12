@@ -35,7 +35,5 @@ DOR.main = {
         DOR.rig.applyHeaderEditPermission();
 
         DOR.editable.bindEditableCells();
-
-        DOR.versionCheck.init();
     }
 };
