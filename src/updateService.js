@@ -56,9 +56,12 @@ async function checkForUpdate() {
 }
 
 function runUpdate() {
-    exec(`"${UPDATE_BAT}"`, {
-        cwd: path.join(__dirname, "..")
-    });
+    exec(
+        `cmd /c start "" "${UPDATE_BAT}"`,
+        {
+            cwd: path.join(__dirname, "..")
+        }
+    );
 }
 
 module.exports = {
