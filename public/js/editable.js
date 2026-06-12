@@ -70,6 +70,23 @@ DOR.editable = {
                     const lines = text
                         .split(/\r?\n/)
                         .map(line => line.trim())
+
+                        // Remove bullets:
+                        // • abc
+                        // ● abc
+                        // ○ abc
+                        // - abc
+                        // – abc
+                        // * abc
+                        // 1. abc
+                        // a. abc
+                        .map(line =>
+                            line.replace(
+                                /^\s*(?:[•●○▪▫◦‣⁃\-–—*]|[0-9]+\.\s*|[a-zA-Z]\.\s*)\s*/,
+                                ""
+                            )
+                        )
+
                         .filter(line => line);
                 
                     if (!lines.length) return;
