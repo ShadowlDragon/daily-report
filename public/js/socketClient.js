@@ -220,20 +220,26 @@ DOR.socketClient = {
             );
         });
 
-        DOR.socket.on(
-            "updateAvailable",
-            data => {
+        DOR.socket.on("updateAvailable", () => {
+            if (!DOR.state.isHost) return;
 
-                console.log(
-                    "UPDATE AVAILABLE",
-                    data
-                );
+            DOR.toast.show(
+                "New update available",
+                "warning"
+            );
 
-                DOR.toast.show(
-                    "New update available",
-                    "warning"
-                );
-            }
-        );
+            const btn = document.createElement("button");
+
+            btn.innerText = "Update Now";
+            btn.className = "update-now-btn";
+
+            btn.onclick = async () => {
+                await fetch("/update-now", {
+                    method: "POST"
+                });
+            };
+
+            document.body.appendChild(btn);
+        });
     }
 };
