@@ -14,9 +14,6 @@
     <!-- CSS -->
     <link rel="stylesheet" href="style.css">
 
-    <!-- PDF -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
     <!-- FONT AWESOME -->
     <link rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -267,13 +264,126 @@
 
     </div>
 
+    <div id="pdfExportModal" class="pdf-export-modal">
+
+        <div class="pdf-export-box">
+
+            <h2>
+                Export PDF
+            </h2>
+
+            <label class="pdf-check pdf-check-all">
+                <input
+                    type="checkbox"
+                    id="pdfAllSections"
+                    checked
+                >
+                <span>All Sections</span>
+            </label>
+
+            <div id="pdfSectionList">
+
+                <label class="pdf-check">
+                    <input
+                        type="checkbox"
+                        class="pdf-section-checkbox"
+                        value="Safety"
+                    >
+                    <span>Safety</span>
+                </label>
+
+                <label class="pdf-check">
+                    <input
+                        type="checkbox"
+                        class="pdf-section-checkbox"
+                        value="Drilling"
+                    >
+                    <span>Drilling</span>
+                </label>
+
+                <label class="pdf-check">
+                    <input
+                        type="checkbox"
+                        class="pdf-section-checkbox"
+                        value="Marine"
+                    >
+                    <span>Marine</span>
+                </label>
+
+                <label class="pdf-check">
+                    <input
+                        type="checkbox"
+                        class="pdf-section-checkbox"
+                        value="Mechanic"
+                    >
+                    <span>Mechanic</span>
+                </label>
+
+                <label class="pdf-check">
+                    <input
+                        type="checkbox"
+                        class="pdf-section-checkbox"
+                        value="Electrician"
+                    >
+                    <span>Electrician</span>
+                </label>
+
+                <label class="pdf-check">
+                    <input
+                        type="checkbox"
+                        class="pdf-section-checkbox"
+                        value="ET"
+                    >
+                    <span>ET</span>
+                </label>
+
+                <label class="pdf-check">
+                    <input
+                        type="checkbox"
+                        class="pdf-section-checkbox"
+                        value="MC"
+                    >
+                    <span>MC</span>
+                </label>
+
+                <label class="pdf-check">
+                    <input
+                        type="checkbox"
+                        class="pdf-section-checkbox"
+                        value="Medic"
+                    >
+                    <span>Medic</span>
+                </label>
+
+            </div>
+
+            <div class="pdf-export-actions">
+
+                <button
+                    id="confirmPdfExportBtn"
+                    onclick="confirmPdfExport()">
+                    Export
+                </button>
+
+                <button
+                    id="cancelPdfExportBtn"
+                    onclick="closePdfExportModal()">
+                    Cancel
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
     <div id="floatingTools" class="floating-tools collapsed">
 
         <button id="toolToggleBtn" class="tool-main">
             <i class="fa-solid fa-gear"></i>
         </button>
     
-        <button id="quickPdfBtn" class="tool-btn" onclick="exportPDF()">
+        <button id="quickPdfBtn" class="tool-btn" onclick="openPdfExportModal()">
             <i class="fa-solid fa-file-pdf"></i>
             <span class="tooltip">Export PDF</span>
         </button>

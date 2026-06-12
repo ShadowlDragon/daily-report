@@ -51,9 +51,13 @@ router.get("/exportPDF", async (req, res) => {
             return;
         }
 
+        const sections =
+            req.query.sections || "All";
+
         const pdfBuffer =
             await generatePDFBuffer(
-                machineName
+                machineName,
+                sections
             );
 
         const date =
