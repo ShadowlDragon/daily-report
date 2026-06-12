@@ -27,6 +27,12 @@ const {
     getLocalIP
 } = require("./src/utils/network");
 
+const updateRoutes =
+    require("./src/routes/updateRoutes");
+
+const setupUpdateScheduler =
+    require("./src/updateScheduler");
+
 const app = express();
 const server = http.createServer(app);
 
@@ -36,7 +42,9 @@ const io = new Server(server, {
     }
 });
 
-const SERVER_VERSION = Date.now().toString();
+app.set("io", io);
+
+app.use(updateRoutes);
 
 
 // =========================
@@ -126,6 +134,8 @@ server.listen(
     PORT,
     "0.0.0.0",
     () => {
+        setupUpdateScheduler(io);
+
         const ip = getLocalIP();
 
         const localUrl = `http://127.0.0.1:${PORT}`;
@@ -160,7 +170,11 @@ server.listen(
         console.log("");
 
         console.log("AUTO PDF:");
-        console.log("Enabled daily at 15:00");
+        console.log(
+            config.autoPdfExport
+                ? "Enabled daily at 15:00"
+                : "Disabled"
+        );
 
         console.log("");
     }

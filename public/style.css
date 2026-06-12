@@ -1118,3 +1118,18 @@ tr.selected-row td:not(.no) {
     border-radius: 0 !important;
     cursor: pointer;
 }
+
+.update-now-btn {
+    position: fixed;
+    right: 28px;
+    bottom: 80px;
+    z-index: 1000002;
+    height: 42px;
+    padding: 0 18px;
+    border: none;
+    border-radius: 999px;
+    background: #4a6cf7;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+}

@@ -189,5 +189,35 @@ DOR.socketClient = {
         
             DOR.rig.applyHeaderEditPermission();
         });
+
+        DOR.socket.on("updateAvailable", () => {
+            if (!DOR.state.isHost) return;
+
+            DOR.toast.show(
+                "New update available. Click Update Now.",
+                "warning"
+            );
+
+            const btn =
+                document.createElement("button");
+
+            btn.innerText = "Update Now";
+            btn.className = "update-now-btn";
+
+            btn.onclick = async () => {
+                await fetch("/update-now", {
+                    method: "POST"
+                });
+            };
+
+            document.body.appendChild(btn);
+        });
+
+        DOR.socket.on("serverUpdating", () => {
+            DOR.toast.show(
+                "Server is updating. Please reconnect in a moment.",
+                "warning"
+            );
+        });
     }
 };
