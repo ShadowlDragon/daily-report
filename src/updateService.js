@@ -42,7 +42,7 @@ async function checkForUpdate() {
     );
 
     const remote = await runCommand(
-        `"${GIT_PATH}" rev-parse origin/main`
+        `"${GIT_PATH}" rev-parse origin/dev`
     );
 
     return {
