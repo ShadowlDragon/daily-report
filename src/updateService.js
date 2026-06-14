@@ -55,15 +55,25 @@ async function checkForUpdate() {
     };
 }
 
+const { spawn } = require("child_process");
+
 function runUpdate() {
-    exec(
-        `cmd /c start "" "${UPDATE_BAT}"`,
+
+    spawn(
+        "cmd",
+        [
+            "/c",
+            "start",
+            "",
+            "update.bat"
+        ],
         {
+            detached: true,
+            stdio: "ignore",
             cwd: path.join(__dirname, "..")
         }
-    );
+    ).unref();
 }
-
 module.exports = {
     checkForUpdate,
     runUpdate
