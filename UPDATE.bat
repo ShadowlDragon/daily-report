@@ -46,7 +46,7 @@ if errorlevel 1 (
 )
 
 echo Resetting local files...
-"%GIT%" reset --hard origin/dev
+"%GIT%" reset --hard origin/main
 
 if errorlevel 1 (
     echo Reset failed.
