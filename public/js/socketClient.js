@@ -214,8 +214,15 @@ DOR.socketClient = {
         });
 
         DOR.socket.on("serverUpdating", () => {
+            const loading =
+                document.getElementById("updateLoadingScreen");
+
+            if (loading) {
+                loading.classList.add("active");
+            }
+
             DOR.toast.show(
-                "Server is updating. Please reconnect in a moment.",
+                "Server is updating...",
                 "warning"
             );
         });
@@ -234,6 +241,13 @@ DOR.socketClient = {
             btn.className = "update-now-btn";
 
             btn.onclick = async () => {
+                const loading =
+                    document.getElementById("updateLoadingScreen");
+
+                if (loading) {
+                    loading.classList.add("active");
+                }
+
                 await fetch("/update-now", {
                     method: "POST"
                 });
