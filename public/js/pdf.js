@@ -1,6 +1,6 @@
 DOR.pdf = {
 
-    async exportPDF() {
+    async exportPDF(selectedSections = []) {
 
         const loading =
             document.getElementById(
@@ -22,8 +22,13 @@ DOR.pdf = {
             const isHost =
                 DOR.state.isHost === true;
 
+            const sections =
+                selectedSections.length
+                    ? selectedSections.join(",")
+                    : "All";
+
             const res = await fetch(
-                `/exportPDF?machineName=${encodeURIComponent(machineName)}&isHost=${isHost}`
+                `/exportPDF?machineName=${encodeURIComponent(machineName)}&isHost=${isHost}&sections=${encodeURIComponent(sections)}`
             );
 
             if (!res.ok) {
@@ -141,6 +146,142 @@ DOR.pdf = {
             }
         }
     }
+};
+
+DOR.pdf.getSectionCheckboxes = function () {
+    return Array.from(
+        document.querySelectorAll(
+            ".pdf-section-checkbox"
+        )
+    );
+};
+
+DOR.pdf.updateAllCheckboxState = function () {
+    const allCheckbox =
+        document.getElementById("pdfAllSections");
+
+    const sectionCheckboxes =
+        DOR.pdf.getSectionCheckboxes();
+
+    const checkedCount =
+        sectionCheckboxes.filter(
+            item => item.checked
+        ).length;
+
+    allCheckbox.checked =
+        checkedCount === sectionCheckboxes.length;
+
+    allCheckbox.indeterminate =
+        checkedCount > 0 &&
+        checkedCount < sectionCheckboxes.length;
+};
+
+DOR.pdf.bindExportModal = function () {
+    const allCheckbox =
+        document.getElementById("pdfAllSections");
+
+    const sectionCheckboxes =
+        DOR.pdf.getSectionCheckboxes();
+
+    allCheckbox.onchange = () => {
+        sectionCheckboxes.forEach(item => {
+            item.checked = allCheckbox.checked;
+        });
+
+        allCheckbox.indeterminate = false;
+    };
+
+    sectionCheckboxes.forEach(item => {
+        item.onchange = () => {
+            DOR.pdf.updateAllCheckboxState();
+        };
+    });
+
+    DOR.pdf.updateAllCheckboxState();
+};
+
+window.openPdfExportModal = function () {
+    const modal =
+        document.getElementById("pdfExportModal");
+
+    modal.classList.add("active");
+
+    DOR.pdf.bindExportModal();
+};
+
+window.closePdfExportModal = function () {
+
+    document
+        .getElementById(
+            "pdfExportModal"
+        )
+        .classList.remove(
+            "active"
+        );
+};
+
+window.confirmPdfExport = async function () {
+
+    const selectedSections =
+        DOR.pdf
+            .getSectionCheckboxes()
+            .filter(item => item.checked)
+            .map(item => item.value);
+
+    if (!selectedSections.length) {
+        DOR.toast.show(
+            "Select at least one section",
+            "warning"
+        );
+        return;
+    }
+
+    const allCheckbox =
+        document.getElementById(
+            "pdfAllSections"
+        );
+
+    if (
+        allCheckbox &&
+        allCheckbox.checked
+    ) {
+
+        closePdfExportModal();
+
+        await DOR.pdf.exportPDF();
+
+        return;
+    }
+
+    document
+        .querySelectorAll(
+            ".pdf-section-checkbox"
+        )
+        .forEach(input => {
+
+            if (input.checked) {
+
+                selectedSections.push(
+                    input.value
+                );
+            }
+        });
+
+    if (!selectedSections.length) {
+
+        DOR.toast.show(
+            "Select at least one section",
+            "warning"
+        );
+
+        return;
+    }
+
+    closePdfExportModal();
+
+    await DOR.pdf.exportPDF(
+        selectedSections
+    );
 };
 
 window.exportPDF =

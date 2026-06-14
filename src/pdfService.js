@@ -30,7 +30,7 @@ const {
     writeErrorLog
 } = require("./loggerService");
 
-async function generatePDFBuffer(sourceName = "Unknown-PC") {
+async function generatePDFBuffer(sourceName = "Unknown-PC", sections = "All") {
     let browser;
 
     try {
@@ -50,6 +50,22 @@ async function generatePDFBuffer(sourceName = "Unknown-PC") {
 
         const page = await browser.newPage();
 
+        await page.setRequestInterception(true);
+
+        page.on("request", req => {
+            const url = req.url();
+
+            if (
+                url.startsWith(`http://127.0.0.1:${PORT}`) ||
+                url.startsWith("data:") ||
+                url.startsWith("blob:")
+            ) {
+                req.continue();
+                return;
+            }
+
+            req.abort();
+
         await page.evaluateOnNewDocument(() => {
             localStorage.setItem(
                 "machineName",
@@ -65,9 +81,57 @@ async function generatePDFBuffer(sourceName = "Unknown-PC") {
             }
         );
 
-        await page.waitForSelector("#report", {
-            timeout: 0
-        });
+        await new Promise(resolve =>
+            setTimeout(resolve, 2000)
+        );
+
+        const selectedSections =
+            sections === "All"
+                ? []
+                : sections.split(",").map(item => item.trim());
+
+        await page.evaluate((selectedSections) => {
+            const hideSelectors = [
+                ".controls",
+                "#floatingTools",
+                "#settingsBtn",
+                "#folderSettingBtn",
+                "#quickPdfBtn",
+                "#settingsModal",
+                "#storageModal",
+                "#pdfExportModal",
+                "#loadingScreen",
+                ".typing-overlay"
+            ];
+
+            hideSelectors.forEach(selector => {
+                document
+                    .querySelectorAll(selector)
+                    .forEach(el => {
+                        el.style.display = "none";
+                        el.classList.remove("active");
+                    });
+            });
+
+            if (selectedSections.length) {
+                document
+                    .querySelectorAll(".section-block")
+                    .forEach(block => {
+                        const title =
+                            block
+                                .querySelector(".section-title")
+                                ?.innerText
+                                ?.trim();
+
+                        if (!selectedSections.includes(title)) {
+                            block.style.display = "none";
+                        }
+                    });
+            }
+
+            document.body.style.filter = "none";
+            document.documentElement.style.filter = "none";
+        }, selectedSections);
 
         await new Promise(resolve =>
             setTimeout(resolve, 2000)
