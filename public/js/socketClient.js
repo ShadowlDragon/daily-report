@@ -194,23 +194,43 @@ DOR.socketClient = {
             if (!DOR.state.isHost) return;
 
             DOR.toast.show(
-                "New update available. Click Update Now.",
+                "New update available",
                 "warning"
             );
 
-            const btn =
-                document.createElement("button");
+            let btn =
+                document.getElementById(
+                    "updateNowBtn"
+                );
 
-            btn.innerText = "Update Now";
-            btn.className = "update-now-btn";
+            if (!btn) {
+                btn =
+                    document.createElement("button");
+
+                btn.id = "updateNowBtn";
+                btn.innerText = "Update Now";
+                btn.className = "update-now-btn";
+
+                document.body.appendChild(btn);
+            }
 
             btn.onclick = async () => {
+                const loading =
+                    document.getElementById(
+                        "updateLoadingScreen"
+                    );
+
+                if (loading) {
+                    loading.classList.add("active");
+                }
+
+                btn.disabled = true;
+                btn.innerText = "Updating...";
+
                 await fetch("/update-now", {
                     method: "POST"
                 });
             };
-
-            document.body.appendChild(btn);
         });
 
         DOR.socket.on("serverUpdating", () => {
@@ -227,35 +247,6 @@ DOR.socketClient = {
             );
 
             DOR.updateReload.waitForServerAndReload();
-        });
-
-        DOR.socket.on("updateAvailable", () => {
-            if (!DOR.state.isHost) return;
-
-            DOR.toast.show(
-                "New update available",
-                "warning"
-            );
-
-            const btn = document.createElement("button");
-
-            btn.innerText = "Update Now";
-            btn.className = "update-now-btn";
-
-            btn.onclick = async () => {
-                const loading =
-                    document.getElementById("updateLoadingScreen");
-
-                if (loading) {
-                    loading.classList.add("active");
-                }
-
-                await fetch("/update-now", {
-                    method: "POST"
-                });
-            };
-
-            document.body.appendChild(btn);
         });
     }
 };
