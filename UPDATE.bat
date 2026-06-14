@@ -74,8 +74,7 @@ if exist "start.bat" (
     start "DOR Server" "%~dp0start.bat"
 ) else (
     echo start.bat not found.
-    pause
     exit /b 1
 )
 
-exit /b 0
+exit
