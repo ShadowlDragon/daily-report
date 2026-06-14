@@ -225,6 +225,8 @@ DOR.socketClient = {
                 "Server is updating...",
                 "warning"
             );
+
+            DOR.updateReload.waitForServerAndReload();
         });
 
         DOR.socket.on("updateAvailable", () => {

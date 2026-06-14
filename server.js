@@ -77,11 +77,9 @@ app.use("/", createReportRoutes(io));
 
 app.use("/", pdfRoutes);
 
-// app.get("/version", (req, res) => {
-//     res.json({
-//         version: SERVER_VERSION
-//     });
-// });
+app.get("/health", (req, res) => {
+    res.sendStatus(200);
+});
 
 
 // =========================
