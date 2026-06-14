@@ -499,6 +499,52 @@ td {
     }
 }
 
+#updateLoadingScreen {
+    position: fixed;
+    inset: 0;
+    background: rgba(17, 24, 39, 0.72);
+    backdrop-filter: blur(4px);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    z-index: 2000000;
+
+    opacity: 0;
+    pointer-events: none;
+
+    transition: opacity 0.2s ease;
+}
+
+#updateLoadingScreen.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.update-loading-box {
+    width: 320px;
+    background: white;
+    border-radius: 18px;
+    padding: 28px;
+    text-align: center;
+    box-shadow: 0 14px 40px rgba(0,0,0,0.3);
+}
+
+.update-loading-title {
+    margin-top: 16px;
+    font-size: 20px;
+    font-weight: 800;
+    color: #111827;
+}
+
+.update-loading-text {
+    margin-top: 8px;
+    font-size: 14px;
+    line-height: 1.4;
+    color: #4b5563;
+}
+
 
 /* =========================
    PRINT
