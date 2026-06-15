@@ -138,32 +138,6 @@ async function generatePDFBuffer(sourceName = "Unknown-PC", sections = "All") {
             setTimeout(resolve, 2000)
         );
 
-        await page.evaluate(() => {
-            const hideSelectors = [
-                ".controls",
-                "#floatingTools",
-                "#settingsBtn",
-                "#folderSettingBtn",
-                "#quickPdfBtn",
-                "#settingsModal",
-                "#storageModal",
-                "#loadingScreen",
-                ".typing-overlay"
-            ];
-
-            hideSelectors.forEach(selector => {
-                document
-                    .querySelectorAll(selector)
-                    .forEach(el => {
-                        el.style.display = "none";
-                        el.classList.remove("active");
-                    });
-            });
-
-            document.body.style.filter = "none";
-            document.documentElement.style.filter = "none";
-        });
-
         const pdfData = await page.pdf({
             format: "A4",
             printBackground: true,
