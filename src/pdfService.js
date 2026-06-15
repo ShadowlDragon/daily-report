@@ -65,6 +65,7 @@ async function generatePDFBuffer(sourceName = "Unknown-PC", sections = "All") {
             }
 
             req.abort();
+        });
 
         await page.evaluateOnNewDocument(() => {
             localStorage.setItem(
