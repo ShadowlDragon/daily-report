@@ -156,9 +156,28 @@ DOR.pdf.getSectionCheckboxes = function () {
     );
 };
 
+DOR.pdf.setAllSectionsChecked = function (checked) {
+    const allCheckbox =
+        document.getElementById("pdfAllSections");
+
+    const sectionCheckboxes =
+        DOR.pdf.getSectionCheckboxes();
+
+    sectionCheckboxes.forEach(item => {
+        item.checked = checked;
+    });
+
+    if (allCheckbox) {
+        allCheckbox.checked = checked;
+        allCheckbox.indeterminate = false;
+    }
+};
+
 DOR.pdf.updateAllCheckboxState = function () {
     const allCheckbox =
         document.getElementById("pdfAllSections");
+
+    if (!allCheckbox) return;
 
     const sectionCheckboxes =
         DOR.pdf.getSectionCheckboxes();
@@ -183,13 +202,13 @@ DOR.pdf.bindExportModal = function () {
     const sectionCheckboxes =
         DOR.pdf.getSectionCheckboxes();
 
-    allCheckbox.onchange = () => {
-        sectionCheckboxes.forEach(item => {
-            item.checked = allCheckbox.checked;
-        });
-
-        allCheckbox.indeterminate = false;
-    };
+    if (allCheckbox) {
+        allCheckbox.onchange = () => {
+            DOR.pdf.setAllSectionsChecked(
+                allCheckbox.checked
+            );
+        };
+    }
 
     sectionCheckboxes.forEach(item => {
         item.onchange = () => {
@@ -204,24 +223,19 @@ window.openPdfExportModal = function () {
     const modal =
         document.getElementById("pdfExportModal");
 
-    modal.classList.add("active");
-
+    DOR.pdf.setAllSectionsChecked(true);
     DOR.pdf.bindExportModal();
+
+    modal.classList.add("active");
 };
 
 window.closePdfExportModal = function () {
-
     document
-        .getElementById(
-            "pdfExportModal"
-        )
-        .classList.remove(
-            "active"
-        );
+        .getElementById("pdfExportModal")
+        .classList.remove("active");
 };
 
 window.confirmPdfExport = async function () {
-
     const selectedSections =
         DOR.pdf
             .getSectionCheckboxes()
@@ -229,46 +243,6 @@ window.confirmPdfExport = async function () {
             .map(item => item.value);
 
     if (!selectedSections.length) {
-        DOR.toast.show(
-            "Select at least one section",
-            "warning"
-        );
-        return;
-    }
-
-    const allCheckbox =
-        document.getElementById(
-            "pdfAllSections"
-        );
-
-    if (
-        allCheckbox &&
-        allCheckbox.checked
-    ) {
-
-        closePdfExportModal();
-
-        await DOR.pdf.exportPDF();
-
-        return;
-    }
-
-    document
-        .querySelectorAll(
-            ".pdf-section-checkbox"
-        )
-        .forEach(input => {
-
-            if (input.checked) {
-
-                selectedSections.push(
-                    input.value
-                );
-            }
-        });
-
-    if (!selectedSections.length) {
-
         DOR.toast.show(
             "Select at least one section",
             "warning"
