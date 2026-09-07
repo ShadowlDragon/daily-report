@@ -5,3 +5,4 @@ node.exe
 config.json
 reports/
 .DS_Store
+public/js/state.js
